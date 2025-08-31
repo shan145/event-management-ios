@@ -106,14 +106,4 @@ struct EventsData: Codable {
     let events: [Event]
 }
 
-struct EventAttendeesResponse: Codable {
-    let success: Bool
-    let message: String?
-    let data: EventAttendeesData
-}
 
-struct EventAttendeesData: Codable {
-    let attendees: [User]
-    let totalCount: Int
-    let eventTitle: String
-}

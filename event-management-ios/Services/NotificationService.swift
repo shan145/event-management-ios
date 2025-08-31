@@ -8,11 +8,14 @@ class NotificationService: ObservableObject {
     
     @Published var isAuthorized = false
     @Published var notifications: [AppNotification] = []
+    @Published var unreadCount: Int = 0
     
     private let apiService = APIService.shared
+    private var realTimeTimer: Timer?
     
     private init() {
         checkAuthorizationStatus()
+        // fetchNotifications() will be called when needed, not in init
     }
     
     // MARK: - Authorization
@@ -20,7 +23,7 @@ class NotificationService: ObservableObject {
     func requestAuthorization() async {
         do {
             let granted = try await UNUserNotificationCenter.current().requestAuthorization(
-                options: [.alert, .badge, .sound]
+                options: [.alert, .badge, .sound, .provisional]
             )
             
             await MainActor.run {
@@ -38,7 +41,7 @@ class NotificationService: ObservableObject {
     func checkAuthorizationStatus() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
-                self.isAuthorized = settings.authorizationStatus == .authorized
+                self.isAuthorized = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
             }
         }
     }
@@ -61,6 +64,7 @@ class NotificationService: ObservableObject {
         content.body = "Your event '\(event.title)' starts in \(minutesBefore) minutes"
         content.sound = .default
         content.badge = 1
+        content.userInfo = ["eventId": event.id, "type": "event_reminder"]
         
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: reminderDate),
@@ -80,8 +84,82 @@ class NotificationService: ObservableObject {
         }
     }
     
+    func scheduleGroupInviteNotification(groupName: String, inviterName: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Group Invitation"
+        content.body = "\(inviterName) invited you to join '\(groupName)'"
+        content.sound = .default
+        content.badge = 1
+        content.userInfo = ["type": "group_invite"]
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        
+        let request = UNNotificationRequest(
+            identifier: "group-invite-\(UUID().uuidString)",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule group invite notification: \(error)")
+            }
+        }
+    }
+    
+    func scheduleEventUpdateNotification(eventTitle: String, updateType: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Event Update"
+        content.body = "Your event '\(eventTitle)' has been \(updateType)"
+        content.sound = .default
+        content.badge = 1
+        content.userInfo = ["type": "event_update"]
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        
+        let request = UNNotificationRequest(
+            identifier: "event-update-\(UUID().uuidString)",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule event update notification: \(error)")
+            }
+        }
+    }
+    
+    func scheduleAttendeeStatusNotification(eventTitle: String, attendeeName: String, status: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Attendee Update"
+        content.body = "\(attendeeName) is now \(status) for '\(eventTitle)'"
+        content.sound = .default
+        content.badge = 1
+        content.userInfo = ["type": "attendee_status"]
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        
+        let request = UNNotificationRequest(
+            identifier: "attendee-status-\(UUID().uuidString)",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule attendee status notification: \(error)")
+            }
+        }
+    }
+    
     func cancelEventReminder(eventId: String) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["event-reminder-\(eventId)"])
+    }
+    
+    func cancelAllNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }
     
     // MARK: - In-App Notifications
@@ -91,6 +169,7 @@ class NotificationService: ObservableObject {
             let response = try await apiService.getNotifications()
             await MainActor.run {
                 self.notifications = response.data.notifications
+                self.updateUnreadCount()
             }
         } catch {
             print("Failed to fetch notifications: \(error)")
@@ -118,14 +197,74 @@ class NotificationService: ObservableObject {
     // MARK: - Real-time Updates
     
     func startRealTimeUpdates() {
-        // Start WebSocket connection or polling for real-time updates
-        // This would typically connect to a WebSocket server
-        print("Started real-time updates")
+        stopRealTimeUpdates() // Stop any existing timer
+        
+        // Poll for new notifications every 30 seconds
+        realTimeTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { _ in
+            Task {
+                await self.fetchNotifications()
+            }
+        }
     }
     
     func stopRealTimeUpdates() {
-        // Stop WebSocket connection or polling
-        print("Stopped real-time updates")
+        realTimeTimer?.invalidate()
+        realTimeTimer = nil
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func updateUnreadCount() {
+        unreadCount = notifications.filter { !$0.isRead }.count
+    }
+    
+    func getNotificationBadgeCount() -> Int {
+        return unreadCount
+    }
+    
+    // MARK: - Notification Categories
+    
+    func setupNotificationCategories() {
+        let eventReminderCategory = UNNotificationCategory(
+            identifier: "EVENT_REMINDER",
+            actions: [
+                UNNotificationAction(
+                    identifier: "VIEW_EVENT",
+                    title: "View Event",
+                    options: [.foreground]
+                ),
+                UNNotificationAction(
+                    identifier: "SNOOZE",
+                    title: "Snooze 15 min",
+                    options: []
+                )
+            ],
+            intentIdentifiers: [],
+            options: []
+        )
+        
+        let groupInviteCategory = UNNotificationCategory(
+            identifier: "GROUP_INVITE",
+            actions: [
+                UNNotificationAction(
+                    identifier: "ACCEPT_INVITE",
+                    title: "Accept",
+                    options: [.foreground]
+                ),
+                UNNotificationAction(
+                    identifier: "DECLINE_INVITE",
+                    title: "Decline",
+                    options: []
+                )
+            ],
+            intentIdentifiers: [],
+            options: []
+        )
+        
+        UNUserNotificationCenter.current().setNotificationCategories([
+            eventReminderCategory,
+            groupInviteCategory
+        ])
     }
 }
 

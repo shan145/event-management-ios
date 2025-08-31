@@ -96,6 +96,21 @@ struct NotificationsView: View {
             }
         }
         .listStyle(PlainListStyle())
+        .overlay(
+            VStack {
+                Spacer()
+                if notificationService.unreadCount > 0 {
+                    HStack {
+                        Text("\(notificationService.unreadCount) unread")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                }
+            }
+        )
     }
 }
 

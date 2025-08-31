@@ -158,6 +158,11 @@ struct MainTabView: View {
         .onAppear {
             // Start real-time updates when the app becomes active
             notificationService.startRealTimeUpdates()
+            
+            // Load initial notifications
+            Task {
+                await notificationService.fetchNotifications()
+            }
         }
         .onDisappear {
             // Stop real-time updates when the app becomes inactive
@@ -166,7 +171,7 @@ struct MainTabView: View {
     }
     
     private var unreadNotificationCount: Int {
-        notificationService.notifications.filter { !$0.isRead }.count
+        notificationService.unreadCount
     }
 }
 

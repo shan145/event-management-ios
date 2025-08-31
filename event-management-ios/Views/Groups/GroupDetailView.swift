@@ -174,8 +174,8 @@ struct GroupDetailView: View {
                             }
                             .buttonStyle(PrimaryButtonStyle())
                             
-                            Button("Send Email") {
-                                // TODO: Send email to group
+                            Button("Create Event") {
+                                // TODO: Navigate to create event
                             }
                             .buttonStyle(SecondaryButtonStyle())
                         }

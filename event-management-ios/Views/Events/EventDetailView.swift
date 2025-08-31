@@ -6,6 +6,7 @@ struct EventDetailView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
+    @State private var showingAttendeeManagement = false
     
     var body: some View {
         ScrollView {
@@ -26,6 +27,10 @@ struct EventDetailView: View {
             ToolbarItem(placement: .primaryAction) {
                 HStack {
                     if event.isOrganizer {
+                        Button("Manage") {
+                            showingAttendeeManagement = true
+                        }
+                        
                         Button("Edit") {
                             showingEditSheet = true
                         }
@@ -41,6 +46,9 @@ struct EventDetailView: View {
         .overlay(actionButtonsOverlay)
         .sheet(isPresented: $showingEditSheet) {
             EditEventView(event: event)
+        }
+        .sheet(isPresented: $showingAttendeeManagement) {
+            EventAttendeeManagementView(event: event)
         }
         .alert("Delete Event", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }

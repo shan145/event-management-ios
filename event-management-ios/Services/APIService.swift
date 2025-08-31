@@ -87,6 +87,27 @@ struct ChangePasswordRequest: Codable {
     let newPassword: String
 }
 
+struct ForgotPasswordRequest: Codable {
+    let email: String
+}
+
+struct ResetPasswordRequest: Codable {
+    let password: String
+}
+
+
+
+struct GroupEventRequest: Codable {
+    let title: String
+    let description: String?
+    let location: String?
+    let date: String
+    let time: String
+    let maxAttendees: Int?
+    let guests: Int
+    let notifyGroup: Bool
+}
+
 class APIService: ObservableObject {
     static let shared = APIService()
     
@@ -380,12 +401,6 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
     
-    func getEventAttendees(eventId: String) async throws -> EventAttendeesResponse {
-        let url = URL(string: "\(baseURL)/events/\(eventId)/attendees")!
-        let request = createRequest(url: url)
-        return try await performRequest(request, responseType: EventAttendeesResponse.self)
-    }
-    
     // MARK: - Join Group Endpoints
     
     func getGroupFromInvite(token: String) async throws -> GroupInviteResponse {
@@ -480,6 +495,54 @@ class APIService: ObservableObject {
         let request = createRequest(url: url, method: "PUT", body: body)
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
+    
+    // MARK: - Password Reset Endpoints
+    
+    func forgotPassword(email: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/auth/forgot-password")!
+        let body = try JSONEncoder().encode(ForgotPasswordRequest(email: email))
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func resetPassword(token: String, password: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/auth/reset-password/\(token)")!
+        let body = try JSONEncoder().encode(ResetPasswordRequest(password: password))
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    // MARK: - Group Events Endpoints
+    
+    func createGroupEvent(groupId: String, title: String, description: String?, location: String?, date: String, time: String, maxAttendees: Int?, guests: Int = 0, notifyGroup: Bool = false) async throws -> EventResponse {
+        let url = URL(string: "\(baseURL)/groups/\(groupId)/events")!
+        let body = try JSONEncoder().encode(GroupEventRequest(
+            title: title,
+            description: description,
+            location: location,
+            date: date,
+            time: time,
+            maxAttendees: maxAttendees,
+            guests: guests,
+            notifyGroup: notifyGroup
+        ))
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: EventResponse.self)
+    }
+    
+    func getGroupEvents(groupId: String) async throws -> EventsResponse {
+        let url = URL(string: "\(baseURL)/groups/\(groupId)/events")!
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: EventsResponse.self)
+    }
+    
+    // MARK: - Event Attendees Endpoint
+    
+    func getEventAttendees(eventId: String) async throws -> EventAttendeesResponse {
+        let url = URL(string: "\(baseURL)/events/\(eventId)/attendees")!
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: EventAttendeesResponse.self)
+    }
 }
 
 // MARK: - Response Types
@@ -524,4 +587,16 @@ struct GroupInvitesResponse: Codable {
 
 struct GroupInvitesData: Codable {
     let invites: [GroupInvite]
+}
+
+struct EventAttendeesResponse: Codable {
+    let success: Bool
+    let message: String?
+    let data: EventAttendeesData
+}
+
+struct EventAttendeesData: Codable {
+    let attendees: [User]
+    let totalCount: Int
+    let eventTitle: String
 }

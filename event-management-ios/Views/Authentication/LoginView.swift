@@ -5,6 +5,7 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isLoading = false
+    @State private var showingForgotPassword = false
     
     var body: some View {
         VStack(spacing: AppSpacing.lg) {
@@ -42,9 +43,12 @@ struct LoginView: View {
             )
             
             Button("Forgot your password?") {
-                // TODO: Navigate to forgot password
+                showingForgotPassword = true
             }
             .buttonStyle(TextButtonStyle())
+        }
+        .sheet(isPresented: $showingForgotPassword) {
+            ForgotPasswordView()
         }
         .padding(.horizontal, AppSpacing.lg)
     }
