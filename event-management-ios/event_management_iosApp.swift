@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct event_management_iosApp: App {
+    @StateObject private var authManager = AuthManager.shared
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(authManager)
+                .preferredColorScheme(.light) // Force light mode to match web app
         }
     }
 }
