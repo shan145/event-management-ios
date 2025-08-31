@@ -22,10 +22,14 @@ class EventsViewModel: ObservableObject {
         errorMessage = nil
         
         do {
+            print("🔍 Loading events...")
             let response = try await apiService.getEvents()
+            print("✅ Events response: \(response)")
+            print("📊 Events count: \(response.data.events.count)")
             events = response.data.events
             filterEvents()
         } catch {
+            print("❌ Error loading events: \(error)")
             errorMessage = error.localizedDescription
         }
         

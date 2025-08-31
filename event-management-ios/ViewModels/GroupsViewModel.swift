@@ -21,10 +21,14 @@ class GroupsViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let response = try await apiService.getGroups()
+            print("🔍 Loading user groups...")
+            let response = try await apiService.getUserGroups()
+            print("✅ Groups response: \(response)")
+            print("📊 Groups count: \(response.data.groups.count)")
             groups = response.data.groups
             filterGroups()
         } catch {
+            print("❌ Error loading groups: \(error)")
             errorMessage = error.localizedDescription
         }
         

@@ -7,11 +7,18 @@ struct CreateEventView: View {
     @State private var showTimePicker = false
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Header
+            headerSection
+            
+            // Content
             ScrollView {
-                VStack(spacing: AppSpacing.lg) {
+                VStack(spacing: AppSpacing.xl) {
                     // Event Details Section
                     eventDetailsSection
+                    
+                    // Group Selection Section
+                    groupSelectionSection
                     
                     // Date & Time Section
                     dateTimeSection
@@ -24,31 +31,19 @@ struct CreateEventView: View {
                     
                     // Description Section
                     descriptionSection
+                    
+                    // Spacer for bottom padding
+                    Spacer(minLength: 100)
                 }
                 .padding(.horizontal, AppSpacing.lg)
-                .padding(.vertical, AppSpacing.md)
+                .padding(.vertical, AppSpacing.xl)
             }
             .background(Color.appBackground)
-            .navigationTitle("Create Event")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        Task {
-                            await viewModel.createEvent()
-                            if viewModel.isSuccess {
-                                dismiss()
-                            }
-                        }
-                    }
-                    .disabled(!viewModel.isFormValid || viewModel.isLoading)
-                }
-            }
+        }
+        .background(Color.appBackground)
+        .ignoresSafeArea(.container, edges: .bottom)
+        .task {
+            await viewModel.loadAvailableGroups()
         }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { }
@@ -57,6 +52,42 @@ struct CreateEventView: View {
                 Text(errorMessage)
             }
         }
+    }
+    
+    private var headerSection: some View {
+        VStack(spacing: AppSpacing.md) {
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .buttonStyle(TextButtonStyle())
+                
+                Spacer()
+                
+                Text("Create Event")
+                    .font(AppTypography.h3)
+                    .foregroundColor(Color.appTextPrimary)
+                
+                Spacer()
+                
+                Button("Create") {
+                    Task {
+                        await viewModel.createEvent()
+                        if viewModel.isSuccess {
+                            dismiss()
+                        }
+                    }
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(!viewModel.isFormValid || viewModel.isLoading)
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.lg)
+            
+            Divider()
+        }
+        .background(Color.appSurface)
+    }
         .sheet(isPresented: $showDatePicker) {
             DatePickerSheet(
                 title: "Select Date",
@@ -74,9 +105,9 @@ struct CreateEventView: View {
     }
     
     private var eventDetailsSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             Text("Event Details")
-                .font(AppTypography.h5)
+                .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
             AppTextField(
@@ -85,16 +116,56 @@ struct CreateEventView: View {
                 text: $viewModel.title
             )
         }
-        .padding(AppSpacing.lg)
+        .padding(AppSpacing.xl)
+        .background(Color.appSurface)
+        .cornerRadius(AppCornerRadius.large)
+        .appShadow(AppShadows.small)
+    }
+    
+    private var groupSelectionSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            Text("Group")
+                .font(AppTypography.h4)
+                .foregroundColor(Color.appTextPrimary)
+            
+            if viewModel.availableGroups.isEmpty {
+                VStack(spacing: AppSpacing.md) {
+                    Text("No groups available")
+                        .font(AppTypography.body2)
+                        .foregroundColor(Color.appTextSecondary)
+                    
+                    Button("Create a group first") {
+                        // TODO: Navigate to create group
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                }
+                .frame(maxWidth: .infinity)
+                .padding(AppSpacing.lg)
+                .background(Color.grey50)
+                .cornerRadius(AppCornerRadius.medium)
+            } else {
+                Picker("Select Group", selection: $viewModel.selectedGroupId) {
+                    Text("Select a group").tag("")
+                    ForEach(viewModel.availableGroups) { group in
+                        Text(group.name).tag(group.id)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .padding(AppSpacing.md)
+                .background(Color.grey50)
+                .cornerRadius(AppCornerRadius.medium)
+            }
+        }
+        .padding(AppSpacing.xl)
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
     }
     
     private var dateTimeSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             Text("Date & Time")
-                .font(AppTypography.h5)
+                .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
             HStack(spacing: AppSpacing.md) {
@@ -139,16 +210,16 @@ struct CreateEventView: View {
                 }
             }
         }
-        .padding(AppSpacing.lg)
+        .padding(AppSpacing.xl)
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
     }
     
     private var locationSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             Text("Location")
-                .font(AppTypography.h5)
+                .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
             AppTextField(
@@ -157,16 +228,16 @@ struct CreateEventView: View {
                 text: $viewModel.location
             )
         }
-        .padding(AppSpacing.lg)
+        .padding(AppSpacing.xl)
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
     }
     
     private var capacitySection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             Text("Capacity")
-                .font(AppTypography.h5)
+                .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
             HStack {
@@ -183,16 +254,16 @@ struct CreateEventView: View {
                 )
             }
         }
-        .padding(AppSpacing.lg)
+        .padding(AppSpacing.xl)
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
     }
     
     private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             Text("Description")
-                .font(AppTypography.h5)
+                .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
             AppTextArea(
@@ -201,12 +272,12 @@ struct CreateEventView: View {
                 text: $viewModel.description
             )
         }
-        .padding(AppSpacing.lg)
+        .padding(AppSpacing.xl)
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
     }
-}
+
 
 // MARK: - Supporting Views
 

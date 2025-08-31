@@ -39,6 +39,8 @@ struct EventsView: View {
         }
         .sheet(isPresented: $showCreateEvent) {
             CreateEventView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .searchable(text: $searchText, prompt: "Search events...")
         .onChange(of: searchText) { _ in

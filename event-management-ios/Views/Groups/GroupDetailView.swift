@@ -26,11 +26,7 @@ struct GroupDetailView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    if let description = group.description, !description.isEmpty {
-                        Text(description)
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                    }
+                    // Description removed - Group model no longer has description field
                 }
                 .padding(.horizontal)
                 
@@ -53,7 +49,7 @@ struct GroupDetailView: View {
                         StatCard(
                             icon: "calendar",
                             title: "Events",
-                            value: "\(group.events?.count ?? 0)",
+                            value: "\(group.totalEventCount)",
                             color: .green
                         )
                     }
@@ -62,7 +58,7 @@ struct GroupDetailView: View {
                         StatCard(
                             icon: "person.crop.circle.badge.plus",
                             title: "Admins",
-                            value: "\(group.admins?.count ?? 0)",
+                            value: "\(((group.adminId != nil ? 1 : 0) + (group.groupAdmins?.count ?? 0)))",
                             color: .purple
                         )
                         
@@ -99,7 +95,7 @@ struct GroupDetailView: View {
                             ForEach(members, id: \.id) { member in
                                 MemberRow(
                                     member: member,
-                                    isAdmin: group.admins?.contains(where: { $0.id == member.id }) ?? false,
+                                    isAdmin: (group.adminId?.id == member.id) || (group.groupAdmins?.contains(where: { $0.id == member.id }) ?? false),
                                     canManage: group.isAdmin
                                 )
                             }
@@ -108,34 +104,8 @@ struct GroupDetailView: View {
                     .padding(.horizontal)
                 }
                 
-                // Events List
-                if let events = group.events, !events.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("Recent Events")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            
-                            Spacer()
-                            
-                            Button("View All") {
-                                // TODO: Navigate to group events
-                            }
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
-                        }
-                        
-                        LazyVStack(spacing: 8) {
-                            ForEach(events.prefix(3), id: \.id) { event in
-                                NavigationLink(destination: EventDetailView(event: event)) {
-                                    EventRow(event: event)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                }
+                // Events List - Removed since Group model no longer has events field
+                // Events would need to be loaded separately via API call
                 
                 Spacer(minLength: 100)
             }

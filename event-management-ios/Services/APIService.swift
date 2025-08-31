@@ -112,7 +112,7 @@ class APIService: ObservableObject {
     static let shared = APIService()
     
     // Use localhost for development
-    private let baseURL = "http://localhost:8080/api"
+    private let baseURL = "https://event-management-server-qxej.onrender.com/api"
     private var authToken: String?
     
     private init() {}
@@ -182,6 +182,11 @@ class APIService: ObservableObject {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
+        // Add Host header for deployed server
+        if baseURL.contains("onrender.com") {
+            request.setValue("event-management-server-qxej.onrender.com", forHTTPHeaderField: "Host")
+        }
+        
         if let body = body {
             request.httpBody = body
         }
@@ -191,17 +196,45 @@ class APIService: ObservableObject {
     
     private func performRequest<T: Codable>(_ request: URLRequest, responseType: T.Type) async throws -> T {
         do {
+            print("🌐 Making request to: \(request.url?.absoluteString ?? "unknown")")
+            print("🔑 Headers: \(request.allHTTPHeaderFields ?? [:])")
+            
             let (data, response) = try await URLSession.shared.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw APIError.networkError(NSError(domain: "API", code: -1, userInfo: nil))
             }
             
+            print("📡 Response status: \(httpResponse.statusCode)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📄 Response body: \(responseString)")
+            }
+            
             switch httpResponse.statusCode {
             case 200...299:
                 do {
-                    return try JSONDecoder().decode(T.self, from: data)
+                    // Additional debugging for events endpoint
+                    if let urlString = request.url?.absoluteString, urlString.contains("/events") {
+                        print("🔍 EVENTS DEBUG - Analyzing response structure:")
+                        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                           let data = json["data"] as? [String: Any],
+                           let events = data["events"] as? [[String: Any]] {
+                            for (index, event) in events.enumerated() {
+                                print("🔍 Event \(index) groupId type: \(type(of: event["groupId"]))")
+                                print("🔍 Event \(index) groupId value: \(event["groupId"] ?? "nil")")
+                                if let groupId = event["groupId"] as? [String: Any] {
+                                    print("🔍 Event \(index) groupId keys: \(groupId.keys)")
+                                }
+                            }
+                        }
+                    }
+                    
+                    let decoder = JSONDecoder()
+                    decoder.dateDecodingStrategy = .iso8601
+                    return try decoder.decode(T.self, from: data)
                 } catch {
+                    print("❌ Decoding error: \(error)")
+                    print("📄 Raw response: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
                     throw APIError.decodingError
                 }
             case 401:
@@ -288,6 +321,12 @@ class APIService: ObservableObject {
     
     func getGroups() async throws -> GroupsResponse {
         let url = URL(string: "\(baseURL)/groups")!
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: GroupsResponse.self)
+    }
+    
+    func getUserGroups() async throws -> GroupsResponse {
+        let url = URL(string: "\(baseURL)/groups/user")!
         let request = createRequest(url: url)
         return try await performRequest(request, responseType: GroupsResponse.self)
     }

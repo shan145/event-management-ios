@@ -124,8 +124,8 @@ struct EventDetailView: View {
             HStack {
                 StatCard(
                     icon: "person.2",
-                    title: "Attendees",
-                    value: "\(event.attendees?.count ?? 0)",
+                                title: "Attendees",
+            value: "\(event.goingList?.count ?? 0)",
                     color: .blue
                 )
                 
@@ -149,7 +149,7 @@ struct EventDetailView: View {
                     StatCard(
                         icon: "percent",
                         title: "Full",
-                        value: "\(Int((Double(event.attendees?.count ?? 0) / Double(maxAttendees)) * 100))%",
+                        value: "\(Int((Double(event.goingList?.count ?? 0) / Double(maxAttendees)) * 100))%",
                         color: .purple
                     )
                 }
@@ -159,7 +159,7 @@ struct EventDetailView: View {
     }
     
     private var attendeesSection: some View {
-        if let attendees = event.attendees, !attendees.isEmpty {
+        if let attendees = event.goingList, !attendees.isEmpty {
             AnyView(
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Attendees")

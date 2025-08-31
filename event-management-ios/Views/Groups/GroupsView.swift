@@ -48,6 +48,8 @@ struct GroupsView: View {
         }
         .sheet(isPresented: $showCreateGroup) {
             CreateGroupView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showJoinGroup) {
             JoinGroupView()

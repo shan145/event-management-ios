@@ -9,6 +9,8 @@ class CreateEventViewModel: ObservableObject {
     @Published var selectedTime = Date()
     @Published var isUnlimitedCapacity = true
     @Published var maxAttendees = ""
+    @Published var selectedGroupId = ""
+    @Published var availableGroups: [Group] = []
     @Published var isLoading = false
     @Published var isSuccess = false
     @Published var errorMessage: String?
@@ -30,7 +32,8 @@ class CreateEventViewModel: ObservableObject {
     
     var isFormValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        selectedDate >= Calendar.current.startOfDay(for: Date())
+        selectedDate >= Calendar.current.startOfDay(for: Date()) &&
+        !selectedGroupId.isEmpty
     }
     
     func createEvent() async {
@@ -56,12 +59,8 @@ class CreateEventViewModel: ObservableObject {
                 maxAttendeesInt = Int(maxAttendees)
             }
             
-            // TODO: We need a groupId for creating events. For now, we'll use a placeholder
-            // In a real app, you'd either select a group or create events without a group
-            let groupId = "placeholder-group-id"
-            
             let response = try await apiService.createEvent(
-                groupId: groupId,
+                groupId: selectedGroupId,
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 description: description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : description.trimmingCharacters(in: .whitespacesAndNewlines),
                 location: location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : location.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -81,6 +80,15 @@ class CreateEventViewModel: ObservableObject {
         isLoading = false
     }
     
+    func loadAvailableGroups() async {
+        do {
+            let response = try await apiService.getUserGroups()
+            availableGroups = response.data.groups
+        } catch {
+            print("Failed to load groups: \(error)")
+        }
+    }
+    
     func resetForm() {
         title = ""
         description = ""
@@ -89,6 +97,7 @@ class CreateEventViewModel: ObservableObject {
         selectedTime = Date()
         isUnlimitedCapacity = true
         maxAttendees = ""
+        selectedGroupId = ""
         isSuccess = false
         errorMessage = nil
         showError = false

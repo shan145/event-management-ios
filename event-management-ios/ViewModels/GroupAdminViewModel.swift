@@ -26,7 +26,17 @@ class GroupAdminViewModel: ObservableObject {
             let response = try await apiService.getGroup(id: groupId)
             
             members = response.data.group.members ?? []
-            admins = response.data.group.admins ?? []
+            // Combine main admin and group admins
+            var allAdmins: [User] = []
+            if let mainAdmin = response.data.group.adminId {
+                allAdmins.append(mainAdmin)
+            }
+            if let groupAdmins = response.data.group.groupAdmins {
+                // Extract User objects from GroupAdmin enum
+                let groupAdminUsers = groupAdmins.compactMap { $0.user }
+                allAdmins.append(contentsOf: groupAdminUsers)
+            }
+            admins = allAdmins
             
             // Load pending invites
             let invitesResponse = try await apiService.getGroupInvites(groupId: groupId)

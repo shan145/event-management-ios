@@ -5,40 +5,29 @@ struct CreateGroupView: View {
     @StateObject private var viewModel = CreateGroupViewModel()
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Header
+            headerSection
+            
+            // Content
             ScrollView {
-                VStack(spacing: AppSpacing.lg) {
+                VStack(spacing: AppSpacing.xl) {
                     // Group Details Section
                     groupDetailsSection
                     
                     // Description Section
                     descriptionSection
+                    
+                    // Spacer for bottom padding
+                    Spacer(minLength: 100)
                 }
                 .padding(.horizontal, AppSpacing.lg)
-                .padding(.vertical, AppSpacing.md)
+                .padding(.vertical, AppSpacing.xl)
             }
             .background(Color.appBackground)
-            .navigationTitle("Create Group")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        Task {
-                            await viewModel.createGroup()
-                            if viewModel.isSuccess {
-                                dismiss()
-                            }
-                        }
-                    }
-                    .disabled(!viewModel.isFormValid || viewModel.isLoading)
-                }
-            }
         }
+        .background(Color.appBackground)
+        .ignoresSafeArea(.container, edges: .bottom)
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { }
         } message: {
@@ -48,10 +37,45 @@ struct CreateGroupView: View {
         }
     }
     
+    private var headerSection: some View {
+        VStack(spacing: AppSpacing.md) {
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .buttonStyle(TextButtonStyle())
+                
+                Spacer()
+                
+                Text("Create Group")
+                    .font(AppTypography.h3)
+                    .foregroundColor(Color.appTextPrimary)
+                
+                Spacer()
+                
+                Button("Create") {
+                    Task {
+                        await viewModel.createGroup()
+                        if viewModel.isSuccess {
+                            dismiss()
+                        }
+                    }
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(!viewModel.isFormValid || viewModel.isLoading)
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.lg)
+            
+            Divider()
+        }
+        .background(Color.appSurface)
+    }
+    
     private var groupDetailsSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             Text("Group Details")
-                .font(AppTypography.h5)
+                .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
             AppTextField(
@@ -60,16 +84,16 @@ struct CreateGroupView: View {
                 text: $viewModel.name
             )
         }
-        .padding(AppSpacing.lg)
+        .padding(AppSpacing.xl)
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
     }
     
     private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             Text("Description")
-                .font(AppTypography.h5)
+                .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
             AppTextArea(
@@ -78,7 +102,7 @@ struct CreateGroupView: View {
                 text: $viewModel.description
             )
         }
-        .padding(AppSpacing.lg)
+        .padding(AppSpacing.xl)
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
