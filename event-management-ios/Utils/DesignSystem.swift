@@ -19,6 +19,12 @@ extension Color {
     
     static let appDivider = Color(red: 0.88, green: 0.88, blue: 0.88)
     
+    // Status colors matching web interface
+    static let statusGoing = Color(red: 0.2, green: 0.8, blue: 0.4) // Green for "Going"
+    static let statusWaitlisted = Color(red: 1.0, green: 0.6, blue: 0.0) // Orange for "Waitlisted"
+    static let statusNotGoing = Color(red: 0.9, green: 0.2, blue: 0.2) // Red for "Not Going"
+    static let statusAdmin = Color(red: 0.2, green: 0.6, blue: 1.0) // Blue for "Group Admin"
+    
     // Grey palette matching Material-UI
     static let grey50 = Color(red: 0.98, green: 0.98, blue: 0.98)
     static let grey100 = Color(red: 0.96, green: 0.96, blue: 0.96)
@@ -166,6 +172,28 @@ struct AppTextFieldStyle: TextFieldStyle {
                 RoundedRectangle(cornerRadius: AppCornerRadius.medium)
                     .stroke(Color.appDivider, lineWidth: 1)
             )
+    }
+}
+
+// MARK: - Status Tag
+
+struct StatusTag: View {
+    let text: String
+    let color: Color
+    
+    init(_ text: String, color: Color) {
+        self.text = text
+        self.color = color
+    }
+    
+    var body: some View {
+        Text(text)
+            .font(AppTypography.caption)
+            .foregroundColor(.white)
+            .padding(.horizontal, AppSpacing.sm)
+            .padding(.vertical, AppSpacing.xs)
+            .background(color)
+            .cornerRadius(AppCornerRadius.large)
     }
 }
 

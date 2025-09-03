@@ -7,86 +7,93 @@ struct EventAttendeeManagementView: View {
     @State private var selectedTab = 0
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 16) {
-                    Image(systemName: "person.3")
-                        .font(.system(size: 48))
-                        .foregroundColor(.appPrimary)
-                    
-                    VStack(spacing: 8) {
-                        Text("Manage Attendees")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Text(event.title)
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding()
-                .background(Color.white.opacity(0.95))
-                
-                // Tab Picker
+        VStack(spacing: 0) {
+            // Custom Header
+            VStack(spacing: 16) {
                 HStack {
-                    Button("Going (\(viewModel.goingAttendees.count))") {
-                        selectedTab = 0
-                    }
-                    .foregroundColor(selectedTab == 0 ? .white : .blue)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(selectedTab == 0 ? Color.blue : Color.clear)
-                    .cornerRadius(8)
-                    
-                    Button("Waitlist (\(viewModel.waitlistAttendees.count))") {
-                        selectedTab = 1
-                    }
-                    .foregroundColor(selectedTab == 1 ? .white : .blue)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(selectedTab == 1 ? Color.blue : Color.clear)
-                    .cornerRadius(8)
-                    
-                    Button("Not Going (\(viewModel.notGoingAttendees.count))") {
-                        selectedTab = 2
-                    }
-                    .foregroundColor(selectedTab == 2 ? .white : .blue)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(selectedTab == 2 ? Color.blue : Color.clear)
-                    .cornerRadius(8)
-                }
-                .padding(.horizontal)
-                .padding(.bottom)
-                
-                // Content
-                if selectedTab == 0 {
-                    goingAttendeesList
-                } else if selectedTab == 1 {
-                    waitlistAttendeesList
-                } else if selectedTab == 2 {
-                    notGoingAttendeesList
-                }
-            }
-            .navigationTitle("Attendee Management")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Attendee Management")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
-                
-                ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
                         presentationMode.wrappedValue.dismiss()
                     }
+                    .foregroundColor(.blue)
+                    
+                    Spacer()
+                    
+                    Text("Attendee Management")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    
+                    Spacer()
+                    
+                    // Empty space for balance
+                    Color.clear
+                        .frame(width: 50)
+                }
+                .padding(.horizontal)
+                
+                Image(systemName: "person.3")
+                    .font(.system(size: 48))
+                    .foregroundColor(.appPrimary)
+                
+                VStack(spacing: 8) {
+                    Text("Manage Attendees")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Text(event.title)
+                        .font(.body)
+                        .foregroundColor(.secondary)
                 }
             }
-            .onAppear {
-                Task {
-                    await viewModel.loadEventAttendees(eventId: event.id)
+            .padding()
+            .background(Color.white.opacity(0.95))
+            
+            // Tab Picker
+            HStack {
+                Button("Going (\(viewModel.goingAttendees.count))") {
+                    selectedTab = 0
                 }
+                .foregroundColor(selectedTab == 0 ? .white : .blue)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(selectedTab == 0 ? Color.blue : Color.clear)
+                .cornerRadius(8)
+                
+                Button("Waitlist (\(viewModel.waitlistAttendees.count))") {
+                    selectedTab = 1
+                }
+                .foregroundColor(selectedTab == 1 ? .white : .blue)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(selectedTab == 1 ? Color.blue : Color.clear)
+                .cornerRadius(8)
+                
+                Button("Not Going (\(viewModel.notGoingAttendees.count))") {
+                    selectedTab = 2
+                }
+                .foregroundColor(selectedTab == 2 ? .white : .blue)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(selectedTab == 2 ? Color.blue : Color.clear)
+                .cornerRadius(8)
+            }
+            .padding(.horizontal)
+            .padding(.bottom)
+            
+            // Content
+            if selectedTab == 0 {
+                goingAttendeesList
+            } else if selectedTab == 1 {
+                waitlistAttendeesList
+            } else if selectedTab == 2 {
+                notGoingAttendeesList
+            }
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            Task {
+                await viewModel.loadEventAttendees(eventId: event.id)
             }
         }
     }

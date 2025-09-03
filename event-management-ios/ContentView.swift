@@ -38,73 +38,44 @@ struct ContentView: View {
 
 struct AuthenticationView: View {
     @State private var isLogin = true
-    @State private var testResult = ""
-    @State private var showTestResult = false
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: AppSpacing.xl) {
-                // Logo/Header
-                VStack(spacing: AppSpacing.md) {
-                    Image(systemName: "calendar.badge.plus")
-                        .font(.system(size: 64))
-                        .foregroundColor(Color.appPrimary)
-                    
-                    Text("Event Management")
-                        .font(AppTypography.h2)
-                        .foregroundColor(Color.appTextPrimary)
-                    
-                    Text("Organize and manage your events with ease")
-                        .font(AppTypography.body2)
-                        .foregroundColor(Color.appTextSecondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, AppSpacing.xxl)
+        VStack(spacing: AppSpacing.xl) {
+            // Logo/Header
+            VStack(spacing: AppSpacing.md) {
+                Image(systemName: "calendar.badge.plus")
+                    .font(.system(size: 64))
+                    .foregroundColor(Color.appPrimary)
                 
-                // Test Connection Button (for debugging)
-                Button("Test Connection") {
-                    Task {
-                        do {
-                            let result = try await APIService.shared.testConnection()
-                            testResult = result
-                            showTestResult = true
-                        } catch {
-                            testResult = "Error: \(error.localizedDescription)"
-                            showTestResult = true
-                        }
-                    }
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.horizontal, AppSpacing.lg)
-                
-                Spacer()
-                
-                // Auth Forms
-                if isLogin {
-                    LoginView()
-                } else {
-                    SignupView()
-                }
-                
-                Spacer()
-                
-                // Toggle between login/signup
-                Button(isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in") {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        isLogin.toggle()
-                    }
-                }
-                .buttonStyle(TextButtonStyle())
-                .padding(.bottom, AppSpacing.lg)
+                Text("Organize and manage your events with ease")
+                    .font(AppTypography.body2)
+                    .foregroundColor(Color.appTextSecondary)
+                    .multilineTextAlignment(.center)
             }
-            .padding(.horizontal, AppSpacing.lg)
-            .background(Color.appBackground)
+            .padding(.top, AppSpacing.xxl)
+            
+            Spacer()
+            
+            // Auth Forms
+            if isLogin {
+                LoginView()
+            } else {
+                SignupView()
+            }
+            
+            Spacer()
+            
+            // Toggle between login/signup
+            Button(isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in") {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isLogin.toggle()
+                }
+            }
+            .buttonStyle(TextButtonStyle())
+            .padding(.bottom, AppSpacing.lg)
         }
-        .alert("Connection Test Result", isPresented: $showTestResult) {
-            Button("OK") { }
-        } message: {
-            Text(testResult)
-        }
+        .padding(.horizontal, AppSpacing.lg)
+        .background(Color.appBackground)
     }
 }
 

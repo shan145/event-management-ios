@@ -6,45 +6,44 @@ struct SettingsView: View {
     @State private var showingLogoutAlert = false
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                headerSection
+        VStack(spacing: 0) {
+            // Custom Header
+            HStack {
+                Text("Settings")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
                 
-                // Tab Content
-                if selectedTab == 0 {
-                    ProfileSettingsView()
-                } else if selectedTab == 1 {
-                    SecuritySettingsView()
-                } else if selectedTab == 2 {
-                    PreferencesSettingsView()
-                }
-            }
-            .navigationTitle("Settings")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Settings")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
+                Spacer()
                 
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Logout") {
-                        showingLogoutAlert = true
-                    }
-                    .foregroundColor(.red)
+                Button("Logout") {
+                    showingLogoutAlert = true
+                }
+                .foregroundColor(.red)
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            
+            // Header
+            headerSection
+            
+            // Tab Content
+            if selectedTab == 0 {
+                ProfileSettingsView()
+            } else if selectedTab == 1 {
+                SecuritySettingsView()
+            } else if selectedTab == 2 {
+                PreferencesSettingsView()
+            }
+        }
+        .alert("Logout", isPresented: $showingLogoutAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Logout", role: .destructive) {
+                Task {
+                    await authManager.logout()
                 }
             }
-            .alert("Logout", isPresented: $showingLogoutAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Logout", role: .destructive) {
-                    Task {
-                        await authManager.logout()
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to logout?")
-            }
+        } message: {
+            Text("Are you sure you want to logout?")
         }
     }
     

@@ -7,7 +7,24 @@ struct EditEventView: View {
     @State private var showingDeleteAlert = false
     
     var body: some View {
-        NavigationView {
+        VStack {
+            // Custom Header
+            HStack {
+                cancelButton
+                
+                Spacer()
+                
+                Text("Edit Event")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                saveDeleteButtons
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            
             ScrollView {
                 VStack(spacing: 24) {
                     eventDetailsSection
@@ -17,16 +34,6 @@ struct EditEventView: View {
                     Spacer(minLength: 100)
                 }
                 .padding()
-            }
-            .navigationTitle("Edit Event")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    cancelButton
-                }
-                
-                ToolbarItem(placement: .primaryAction) {
-                    saveDeleteButtons
-                }
             }
             .sheet(isPresented: $viewModel.showingDatePicker) {
                 DatePickerSheet(

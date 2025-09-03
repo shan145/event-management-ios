@@ -5,38 +5,95 @@ struct NotificationsView: View {
     @State private var showingNotificationSettings = false
     
     var body: some View {
-        NavigationView {
-            VStack {
-                if notificationService.notifications.isEmpty {
-                    emptyStateView
-                } else {
-                    notificationsList
-                }
-            }
-            .navigationTitle("Notifications")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Notifications")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
+        VStack(spacing: 0) {
+            // Custom Header
+            HStack {
+                Text("Notifications")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
                 
-                ToolbarItem(placement: .cancellationAction) {
+                Spacer()
+                
+                HStack(spacing: 16) {
                     Button("Settings") {
                         showingNotificationSettings = true
                     }
-                }
-                
-                ToolbarItem(placement: .primaryAction) {
+                    .foregroundColor(.blue)
+                    
                     if !notificationService.notifications.isEmpty {
                         Button("Mark All Read") {
                             Task {
                                 await notificationService.markAllNotificationsAsRead()
                             }
                         }
+                        .foregroundColor(.blue)
                     }
                 }
             }
+            .padding(.horizontal)
+            .padding(.top)
+            
+            // Content
+            if notificationService.notifications.isEmpty {
+                VStack(spacing: 24) {
+                    Image(systemName: "bell.slash")
+                        .font(.system(size: 64))
+                        .foregroundColor(.secondary)
+                    
+                    VStack(spacing: 8) {
+                        Text("No Notifications")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        
+                        Text("You're all caught up! Check back later for updates about your events and groups.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    
+                    if !notificationService.isAuthorized {
+                        AppButton(
+                            title: "Enable Notifications",
+                            action: {
+                                Task {
+                                    await notificationService.requestAuthorization()
+                                }
+                            },
+                            style: .primary
+                        )
+                        .padding(.horizontal)
+                    }
+                }
+                .padding()
+            } else {
+                List {
+                    ForEach(notificationService.notifications) { notification in
+                        NotificationRowView(notification: notification) {
+                            Task {
+                                await notificationService.markNotificationAsRead(notificationId: notification.id)
+                            }
+                        }
+                    }
+                }
+                .listStyle(PlainListStyle())
+                .overlay(
+                    VStack {
+                        Spacer()
+                        if notificationService.unreadCount > 0 {
+                            HStack {
+                                Text("\(notificationService.unreadCount) unread")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 8)
+                        }
+                    }
+                )
+            }
+        }
             .refreshable {
                 await notificationService.fetchNotifications()
             }
@@ -51,70 +108,7 @@ struct NotificationsView: View {
         }
     }
     
-    private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "bell.slash")
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
-            
-            VStack(spacing: 8) {
-                Text("No Notifications")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                
-                Text("You're all caught up! Check back later for updates about your events and groups.")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-            
-            if !notificationService.isAuthorized {
-                AppButton(
-                    title: "Enable Notifications",
-                    action: {
-                        Task {
-                            await notificationService.requestAuthorization()
-                        }
-                    },
-                    style: .primary
-                )
-                .padding(.horizontal)
-            }
-        }
-        .padding()
-    }
-    
-    private var notificationsList: some View {
-        List {
-            ForEach(notificationService.notifications) { notification in
-                NotificationRowView(notification: notification) {
-                    Task {
-                        await notificationService.markNotificationAsRead(notificationId: notification.id)
-                    }
-                }
-            }
-        }
-        .listStyle(PlainListStyle())
-        .overlay(
-            VStack {
-                Spacer()
-                if notificationService.unreadCount > 0 {
-                    HStack {
-                        Text("\(notificationService.unreadCount) unread")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
-                }
-            }
-        )
-    }
-}
-
-// MARK: - Notification Row View
+    // MARK: - Notification Row View
 
 struct NotificationRowView: View {
     let notification: AppNotification
@@ -208,7 +202,29 @@ struct NotificationSettingsView: View {
     @StateObject private var preferencesViewModel = PreferencesSettingsViewModel()
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Custom Header
+            HStack {
+                Button("Done") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Text("Notification Settings")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                // Empty space for balance
+                Color.clear
+                    .frame(width: 50)
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            
             ScrollView {
                 VStack(spacing: 24) {
                     // Notification Authorization Status
@@ -291,23 +307,9 @@ struct NotificationSettingsView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Notification Settings")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Notification Settings")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
-                
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Done") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-            }
-            .onAppear {
-                preferencesViewModel.loadPreferences()
-            }
+        }
+        .onAppear {
+            preferencesViewModel.loadPreferences()
         }
     }
 }

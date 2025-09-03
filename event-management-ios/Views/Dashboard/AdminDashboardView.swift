@@ -5,7 +5,18 @@ struct AdminDashboardView: View {
     @StateObject private var viewModel = AdminDashboardViewModel()
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Custom Header
+            HStack {
+                Text("Admin Dashboard")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            
             ScrollView {
                 VStack(spacing: AppSpacing.lg) {
                     // Admin Header
@@ -31,7 +42,6 @@ struct AdminDashboardView: View {
                 .padding(.vertical, AppSpacing.md)
             }
             .background(Color.appBackground)
-            .navigationTitle("Admin Dashboard")
             .refreshable {
                 await viewModel.loadAdminData()
             }

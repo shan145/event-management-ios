@@ -5,34 +5,46 @@ struct EventsView: View {
     @StateObject private var viewModel = EventsViewModel()
     @State private var showCreateEvent = false
     @State private var searchText = ""
+    @State private var selectedEvent: Event?
+    @State private var showEventDetail = false
+    @State private var showEventAttendeeManagement = false
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Search and Filter Bar
-                searchAndFilterBar
+        VStack(spacing: 0) {
+            // Custom Header
+            HStack {
+                Text("Events")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
                 
-                // Events List
-                if viewModel.isLoading {
-                    LoadingView()
-                } else if viewModel.events.isEmpty {
-                    emptyStateView
-                } else {
-                    eventsList
-                }
-            }
-            .background(Color.appBackground)
-            .navigationTitle("Events")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+                Spacer()
+                
+                if authManager.currentUser?.canCreateEvents == true {
                     Button(action: { showCreateEvent = true }) {
                         Image(systemName: "plus")
+                            .font(.title2)
+                            .foregroundColor(.blue)
                     }
                 }
             }
-            .refreshable {
-                await viewModel.loadEvents()
+            .padding(.horizontal)
+            .padding(.top)
+            
+            // Search and Filter Bar
+            searchAndFilterBar
+            
+            // Events List
+            if viewModel.isLoading {
+                LoadingView()
+            } else if viewModel.events.isEmpty {
+                emptyStateView
+            } else {
+                eventsList
             }
+        }
+        .background(Color.appBackground)
+        .refreshable {
+            await viewModel.loadEvents()
         }
         .task {
             await viewModel.loadEvents()
@@ -41,6 +53,20 @@ struct EventsView: View {
             CreateEventView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showEventDetail) {
+            if let event = selectedEvent {
+                EventDetailView(event: event)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+        }
+        .sheet(isPresented: $showEventAttendeeManagement) {
+            if let event = selectedEvent {
+                EventAttendeeManagementView(event: event)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
         }
         .searchable(text: $searchText, prompt: "Search events...")
         .onChange(of: searchText) { _ in
@@ -89,12 +115,31 @@ struct EventsView: View {
     private var eventsList: some View {
         List {
             ForEach(viewModel.filteredEvents) { event in
-                NavigationLink(destination: EventDetailView(event: event)) {
-                    EventCardView(event: event) {
-                        // Navigation is handled by NavigationLink
+                EventCardView(
+                    event: event,
+                    onTap: {
+                        selectedEvent = event
+                        showEventDetail = true
+                    },
+                    onNotGoing: {
+                        Task {
+                            await notGoingToEvent(eventId: event.id)
+                        }
+                    },
+                    onViewAttendees: {
+                        selectedEvent = event
+                        showEventAttendeeManagement = true
+                    },
+                    onEdit: {
+                        selectedEvent = event
+                        // TODO: Navigate to edit event view
+                    },
+                    onDelete: {
+                        Task {
+                            await deleteEvent(eventId: event.id)
+                        }
                     }
-                }
-                .buttonStyle(PlainButtonStyle())
+                )
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: AppSpacing.sm, leading: AppSpacing.lg, bottom: AppSpacing.sm, trailing: AppSpacing.lg))
@@ -119,13 +164,40 @@ struct EventsView: View {
                 .foregroundColor(Color.appTextSecondary)
                 .multilineTextAlignment(.center)
             
-            AppButton(title: "Create Event", action: {
-                showCreateEvent = true
-            })
-            .frame(maxWidth: 200)
+            if authManager.currentUser?.canCreateEvents == true {
+                AppButton(title: "Create Event", action: {
+                    showCreateEvent = true
+                })
+                .frame(maxWidth: 200)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBackground)
+    }
+    
+    private func notGoingToEvent(eventId: String) async {
+        do {
+            let success = try await APIService.shared.rejectEventAttendee(
+                eventId: eventId,
+                userId: authManager.currentUser?.id ?? ""
+            )
+            if success.success {
+                await viewModel.loadEvents()
+            }
+        } catch {
+            print("Error marking as not going: \(error)")
+        }
+    }
+    
+    private func deleteEvent(eventId: String) async {
+        do {
+            let success = try await APIService.shared.deleteEvent(id: eventId)
+            if success.success {
+                await viewModel.loadEvents()
+            }
+        } catch {
+            print("Error deleting event: \(error)")
+        }
     }
 }
 
@@ -151,13 +223,18 @@ struct FilterPill: View {
 }
 
 struct EventCardView: View {
+    @EnvironmentObject var authManager: AuthManager
     let event: Event
     let onTap: () -> Void
+    let onNotGoing: () -> Void
+    let onViewAttendees: () -> Void
+    let onEdit: () -> Void
+    let onDelete: () -> Void
     
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                // Header
+                // Header with status tag
                 HStack {
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
                         Text(event.title)
@@ -175,20 +252,15 @@ struct EventCardView: View {
                     
                     Spacer()
                     
-                    // Status indicator
-                    statusIndicator
+                    // Status tag (top right)
+                    StatusTag(eventStatusText, color: eventStatusColor)
                 }
                 
                 // Event details
-                HStack(spacing: AppSpacing.lg) {
-                    EventDetailItem(
-                        icon: "calendar",
-                        text: event.formattedDate
-                    )
-                    
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     EventDetailItem(
                         icon: "clock",
-                        text: event.formattedTime
+                        text: "\(event.formattedDate) • \(event.formattedTime)"
                     )
                     
                     if let location = event.location {
@@ -197,20 +269,55 @@ struct EventCardView: View {
                             text: location
                         )
                     }
+                    
+                    // Attendees info
+                    EventDetailItem(
+                        icon: "person.2",
+                        text: attendeesText
+                    )
                 }
                 
-                // Capacity info
-                if let maxAttendees = event.maxAttendees {
+                // Action buttons
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    ActionButton(
+                        title: "Not Going",
+                        icon: "xmark",
+                        color: Color.statusNotGoing
+                    ) {
+                        onNotGoing()
+                    }
+                    
+                    ActionButton(
+                        title: "View Attendees",
+                        icon: "eye",
+                        color: Color.appTextPrimary
+                    ) {
+                        onViewAttendees()
+                    }
+                }
+                
+                // Admin actions (if user is admin)
+                if authManager.currentUser?.isAdmin == true {
                     HStack {
-                        Image(systemName: "person.2")
-                            .font(.system(size: 12))
-                            .foregroundColor(Color.appTextSecondary)
-                        
-                        Text("Capacity: \(maxAttendees) people")
-                            .font(AppTypography.caption)
-                            .foregroundColor(Color.appTextSecondary)
-                        
                         Spacer()
+                        
+                        Button(action: {
+                            onEdit()
+                        }) {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color.appTextSecondary)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Button(action: {
+                            onDelete()
+                        }) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color.statusNotGoing)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
             }
@@ -222,32 +329,51 @@ struct EventCardView: View {
         .buttonStyle(PlainButtonStyle())
     }
     
-    private var statusIndicator: some View {
-        let (color, text) = eventStatus
-        return Text(text)
-            .font(AppTypography.caption)
-            .foregroundColor(.white)
-            .padding(.horizontal, AppSpacing.sm)
-            .padding(.vertical, AppSpacing.xs)
-            .background(color)
-            .cornerRadius(AppCornerRadius.small)
-    }
-    
-    private var eventStatus: (Color, String) {
+    private var eventStatusText: String {
         let today = Date()
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         
         guard let eventDate = formatter.date(from: event.date) else {
-            return (Color.grey600, "Unknown")
+            return "Unknown"
         }
         
         if eventDate < today {
-            return (Color.grey600, "Past")
+            return "Past"
         } else if Calendar.current.isDate(eventDate, inSameDayAs: today) {
-            return (Color.appPrimary, "Today")
+            return "Today"
         } else {
-            return (Color.appSecondary, "Upcoming")
+            return "Going" // Default status for upcoming events
+        }
+    }
+    
+    private var eventStatusColor: Color {
+        let today = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        guard let eventDate = formatter.date(from: event.date) else {
+            return Color.grey600
+        }
+        
+        if eventDate < today {
+            return Color.grey600
+        } else if Calendar.current.isDate(eventDate, inSameDayAs: today) {
+            return Color.statusGoing
+        } else {
+            return Color.statusGoing
+        }
+    }
+    
+    private var attendeesText: String {
+        let goingCount = event.goingList?.count ?? 0
+        let waitlistCount = event.noGoList?.count ?? 0
+        let total = goingCount + waitlistCount
+        
+        if total == 0 {
+            return "0 total (0 going) • 0 waitlisted"
+        } else {
+            return "\(total) total (\(goingCount) going) • \(waitlistCount) waitlisted"
         }
     }
 }
@@ -267,6 +393,28 @@ struct EventDetailItem: View {
                 .foregroundColor(Color.appTextSecondary)
                 .lineLimit(1)
         }
+    }
+}
+
+struct ActionButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: AppSpacing.xs) {
+                Image(systemName: icon)
+                    .font(.system(size: 12))
+                    .foregroundColor(color)
+                
+                Text(title)
+                    .font(AppTypography.caption)
+                    .foregroundColor(color)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

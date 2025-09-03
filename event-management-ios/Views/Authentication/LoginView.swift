@@ -8,49 +8,84 @@ struct LoginView: View {
     @State private var showingForgotPassword = false
     
     var body: some View {
-        VStack(spacing: AppSpacing.lg) {
-            VStack(spacing: AppSpacing.md) {
-                Text("Welcome Back")
-                    .font(AppTypography.h3)
-                    .foregroundColor(Color.appTextPrimary)
+        ZStack {
+            Color.appBackground
+                .ignoresSafeArea()
+            
+            VStack(spacing: AppSpacing.xl) {
+                Spacer()
                 
-                Text("Sign in to your account")
+                // Brand and welcome section
+                VStack(spacing: AppSpacing.lg) {
+                    Text("Eventify")
+                        .font(AppTypography.h1)
+                        .foregroundColor(Color.appTextPrimary)
+                        .fontWeight(.bold)
+                    
+                    VStack(spacing: AppSpacing.sm) {
+                        Text("Welcome back")
+                            .font(AppTypography.h3)
+                            .foregroundColor(Color.appTextPrimary)
+                        
+                        Text("Sign in to your account to continue")
+                            .font(AppTypography.body2)
+                            .foregroundColor(Color.appTextSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                
+                // Form section
+                VStack(spacing: AppSpacing.lg) {
+                    VStack(spacing: AppSpacing.md) {
+                        AppTextField(
+                            title: "Email",
+                            placeholder: "Enter your email",
+                            text: $email,
+                            validation: validateEmail
+                        )
+                        
+                        AppTextField(
+                            title: "Password",
+                            placeholder: "Enter your password",
+                            text: $password,
+                            isSecure: true,
+                            validation: validatePassword
+                        )
+                    }
+                    
+                    AppButton(
+                        title: "Sign in",
+                        action: handleLogin,
+                        isLoading: isLoading
+                    )
+                    
+                    Button("Forgot your password?") {
+                        showingForgotPassword = true
+                    }
+                    .buttonStyle(TextButtonStyle())
+                }
+                
+                Spacer()
+                
+                // Sign up link
+                HStack {
+                    Text("Don't have an account?")
+                        .font(AppTypography.body2)
+                        .foregroundColor(Color.appTextSecondary)
+                    
+                    Button("Sign up") {
+                        // Navigation will be handled by parent view
+                    }
+                    .buttonStyle(TextButtonStyle())
                     .font(AppTypography.body2)
-                    .foregroundColor(Color.appTextSecondary)
+                    .fontWeight(.semibold)
+                }
             }
-            
-            VStack(spacing: AppSpacing.md) {
-                AppTextField(
-                    title: "Email",
-                    placeholder: "Enter your email",
-                    text: $email,
-                    validation: validateEmail
-                )
-                
-                AppTextField(
-                    title: "Password",
-                    placeholder: "Enter your password",
-                    text: $password,
-                    isSecure: true,
-                    validation: validatePassword
-                )
-            }
-            
-            AppButton(
-                title: "Sign In",
-                action: handleLogin,
-                isLoading: isLoading
-            )
-            
-            Button("Forgot your password?") {
-                showingForgotPassword = true
-            }
-            .buttonStyle(TextButtonStyle())
+            .padding(.horizontal, AppSpacing.xl)
         }
         .sheet(isPresented: $showingForgotPassword) {
             ForgotPasswordView()
         }
-        .padding(.horizontal, AppSpacing.lg)
     }
     
     private func handleLogin() {

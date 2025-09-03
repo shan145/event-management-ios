@@ -7,6 +7,7 @@ struct GroupDetailView: View {
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
     @State private var showingInviteSheet = false
+    @State private var showingGroupAdminSheet = false
     
     var body: some View {
         ScrollView {
@@ -83,11 +84,11 @@ struct GroupDetailView: View {
                             Spacer()
                             
                             if group.isAdmin {
-                                NavigationLink(destination: GroupAdminView(group: group)) {
-                                    Text("Manage")
-                                        .font(.subheadline)
-                                        .foregroundColor(.blue)
+                                Button("Manage") {
+                                    showingGroupAdminSheet = true
                                 }
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
                             }
                         }
                         
@@ -170,6 +171,11 @@ struct GroupDetailView: View {
         }
         .sheet(isPresented: $showingInviteSheet) {
             InviteMembersView(group: group)
+        }
+        .sheet(isPresented: $showingGroupAdminSheet) {
+            GroupAdminView(group: group)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .alert("Delete Group", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }

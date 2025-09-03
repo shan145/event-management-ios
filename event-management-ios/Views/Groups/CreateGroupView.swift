@@ -10,21 +10,41 @@ struct CreateGroupView: View {
             headerSection
             
             // Content
-            ScrollView {
-                VStack(spacing: AppSpacing.xl) {
-                    // Group Details Section
-                    groupDetailsSection
-                    
-                    // Description Section
-                    descriptionSection
-                    
-                    // Spacer for bottom padding
-                    Spacer(minLength: 100)
+            if AuthManager.shared.currentUser?.canCreateGroups == true {
+                ScrollView {
+                    VStack(spacing: AppSpacing.xl) {
+                        // Group Details Section
+                        groupDetailsSection
+                        
+                        // Description Section
+                        descriptionSection
+                        
+                        // Spacer for bottom padding
+                        Spacer(minLength: 100)
+                    }
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.vertical, AppSpacing.xl)
                 }
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.vertical, AppSpacing.xl)
+                .background(Color.appBackground)
+            } else {
+                // Access denied view
+                VStack(spacing: AppSpacing.xl) {
+                    Image(systemName: "lock.shield")
+                        .font(.system(size: 64))
+                        .foregroundColor(Color.appTextSecondary)
+                    
+                    Text("Access Denied")
+                        .font(AppTypography.h3)
+                        .foregroundColor(Color.appTextPrimary)
+                    
+                    Text("Only super admins can create groups")
+                        .font(AppTypography.body2)
+                        .foregroundColor(Color.appTextSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.appBackground)
             }
-            .background(Color.appBackground)
         }
         .background(Color.appBackground)
         .ignoresSafeArea(.container, edges: .bottom)
@@ -62,7 +82,7 @@ struct CreateGroupView: View {
                     }
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                .disabled(!viewModel.isFormValid || viewModel.isLoading)
+                .disabled(!viewModel.isFormValid || viewModel.isLoading || AuthManager.shared.currentUser?.canCreateGroups != true)
             }
             .padding(.horizontal, AppSpacing.lg)
             .padding(.top, AppSpacing.lg)

@@ -5,7 +5,31 @@ struct InviteMembersView: View {
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
-        NavigationView {
+        VStack {
+            // Custom Header
+            HStack {
+                Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Text("Invite Members")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                Button("Invite") {
+                    // TODO: Implement invite functionality
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(.blue)
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            
             VStack {
                 Text("Invite Members")
                     .font(.title)
@@ -17,21 +41,6 @@ struct InviteMembersView: View {
                     .foregroundColor(.secondary)
                 
                 Spacer()
-            }
-            .navigationTitle("Invite Members")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Invite") {
-                        // TODO: Implement invite functionality
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
             }
         }
     }

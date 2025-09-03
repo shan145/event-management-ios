@@ -83,7 +83,20 @@ class CreateEventViewModel: ObservableObject {
     func loadAvailableGroups() async {
         do {
             let response = try await apiService.getUserGroups()
-            availableGroups = response.data.groups
+            // Filter to only show groups where the user is an admin
+            if let currentUser = AuthManager.shared.currentUser {
+                if currentUser.isAdmin {
+                    // Super admins can create events in any group
+                    availableGroups = response.data.groups
+                } else {
+                    // Group admins can only create events in their own groups
+                    availableGroups = response.data.groups.filter { group in
+                        currentUser.isAdminOfGroup(group.id)
+                    }
+                }
+            } else {
+                availableGroups = []
+            }
         } catch {
             print("Failed to load groups: \(error)")
         }

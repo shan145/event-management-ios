@@ -37,6 +37,22 @@ struct User: Codable, Identifiable, Equatable {
         groupAdminOf != nil && !groupAdminOf!.isEmpty
     }
     
+    var isSuperAdmin: Bool {
+        role == "admin"
+    }
+    
+    func isAdminOfGroup(_ groupId: String) -> Bool {
+        groupAdminOf?.contains(groupId) == true
+    }
+    
+    var canCreateEvents: Bool {
+        isAdmin || isGroupAdmin
+    }
+    
+    var canCreateGroups: Bool {
+        isSuperAdmin
+    }
+    
     // Custom initializer for creating User instances
     init(id: String, firstName: String, lastName: String, email: String, role: String? = nil, groupAdminOf: [String]? = nil, createdAt: String? = nil, updatedAt: String? = nil) {
         self.id = id

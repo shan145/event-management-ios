@@ -9,12 +9,35 @@ struct GroupAdminView: View {
     @State private var showingDeleteAlert = false
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
+            // Custom Header
+            VStack(spacing: 16) {
+                HStack {
+                    Button("Done") {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                    .foregroundColor(.blue)
+                    
+                    Spacer()
+                    
+                    Text("Group Admin")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    
+                    Spacer()
+                    
+                    Button("Invite") {
+                        showingInviteSheet = true
+                    }
+                    .foregroundColor(.blue)
+                }
+                .padding(.horizontal)
+                
                 // Header with group info
                 headerSection
-                
-                            // Tab picker
+            }
+            
+            // Tab picker
             HStack {
                 Button("Members") {
                     selectedTab = 0
@@ -44,55 +67,33 @@ struct GroupAdminView: View {
                 .cornerRadius(8)
             }
             .padding()
-                
-                // Tab content
-                if selectedTab == 0 {
-                    GroupMembersView(group: group, viewModel: viewModel)
-                } else if selectedTab == 1 {
-                    GroupInvitesView(group: group, viewModel: viewModel)
-                } else if selectedTab == 2 {
-                    GroupSettingsView(group: group, viewModel: viewModel)
-                }
+            
+            // Tab content
+            if selectedTab == 0 {
+                GroupMembersView(group: group, viewModel: viewModel)
+            } else if selectedTab == 1 {
+                GroupInvitesView(group: group, viewModel: viewModel)
+            } else if selectedTab == 2 {
+                GroupSettingsView(group: group, viewModel: viewModel)
             }
-            .navigationTitle("Group Admin")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Group Admin")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
-                
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Invite") {
-                        showingInviteSheet = true
-                    }
-                    .foregroundColor(.blue)
-                }
-            }
-            .sheet(isPresented: $showingInviteSheet) {
-                InviteMembersView(group: group)
-            }
-            .alert("Delete Group", isPresented: $showingDeleteAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    Task {
-                        await viewModel.deleteGroup(groupId: group.id)
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to delete this group? This action cannot be undone.")
-            }
-            .onAppear {
+        }
+        .sheet(isPresented: $showingInviteSheet) {
+            InviteMembersView(group: group)
+        }
+        .alert("Delete Group", isPresented: $showingDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
                 Task {
-                    await viewModel.loadGroupData(groupId: group.id)
+                    await viewModel.deleteGroup(groupId: group.id)
+                    presentationMode.wrappedValue.dismiss()
                 }
+            }
+        } message: {
+            Text("Are you sure you want to delete this group? This action cannot be undone.")
+        }
+        .onAppear {
+            Task {
+                await viewModel.loadGroupData(groupId: group.id)
             }
         }
     }

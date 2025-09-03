@@ -5,7 +5,18 @@ struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Custom Header
+            HStack {
+                Text("Dashboard")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            
             ScrollView {
                 VStack(spacing: AppSpacing.lg) {
                     // Welcome Header
@@ -31,7 +42,6 @@ struct DashboardView: View {
                 .padding(.vertical, AppSpacing.md)
             }
             .background(Color.appBackground)
-            .navigationTitle("Dashboard")
             .refreshable {
                 await viewModel.loadDashboardData()
             }
@@ -289,7 +299,7 @@ struct GroupRowView: View {
                     .foregroundColor(Color.appTextPrimary)
                     .lineLimit(1)
                 
-                Text("\(group.memberCount) members • \(group.eventCount) events")
+                Text("\(group.memberCount) members • \(group.eventCount ?? 0) events")
                     .font(AppTypography.caption)
                     .foregroundColor(Color.appTextSecondary)
             }

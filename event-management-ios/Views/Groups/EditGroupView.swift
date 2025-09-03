@@ -5,7 +5,31 @@ struct EditGroupView: View {
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
-        NavigationView {
+        VStack {
+            // Custom Header
+            HStack {
+                Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Text("Edit Group")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                Button("Save") {
+                    // TODO: Implement save functionality
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(.blue)
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            
             VStack {
                 Text("Edit Group")
                     .font(.title)
@@ -17,21 +41,6 @@ struct EditGroupView: View {
                     .foregroundColor(.secondary)
                 
                 Spacer()
-            }
-            .navigationTitle("Edit Group")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        // TODO: Implement save functionality
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
             }
         }
     }

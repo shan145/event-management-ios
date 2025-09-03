@@ -52,6 +52,20 @@ struct CreateEventView: View {
                 Text(errorMessage)
             }
         }
+        .sheet(isPresented: $showDatePicker) {
+            DatePickerSheet(
+                title: "Select Date",
+                date: $viewModel.selectedDate,
+                isDate: true
+            )
+        }
+        .sheet(isPresented: $showTimePicker) {
+            DatePickerSheet(
+                title: "Select Time",
+                date: $viewModel.selectedTime,
+                isDate: false
+            )
+        }
     }
     
     private var headerSection: some View {
@@ -79,7 +93,7 @@ struct CreateEventView: View {
                     }
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                .disabled(!viewModel.isFormValid || viewModel.isLoading)
+                .disabled(!viewModel.isFormValid || viewModel.isLoading || AuthManager.shared.currentUser?.canCreateEvents != true)
             }
             .padding(.horizontal, AppSpacing.lg)
             .padding(.top, AppSpacing.lg)
@@ -87,21 +101,6 @@ struct CreateEventView: View {
             Divider()
         }
         .background(Color.appSurface)
-    }
-        .sheet(isPresented: $showDatePicker) {
-            DatePickerSheet(
-                title: "Select Date",
-                date: $viewModel.selectedDate,
-                isDate: true
-            )
-        }
-        .sheet(isPresented: $showTimePicker) {
-            DatePickerSheet(
-                title: "Select Time",
-                date: $viewModel.selectedTime,
-                isDate: false
-            )
-        }
     }
     
     private var eventDetailsSection: some View {
@@ -130,14 +129,16 @@ struct CreateEventView: View {
             
             if viewModel.availableGroups.isEmpty {
                 VStack(spacing: AppSpacing.md) {
-                    Text("No groups available")
-                        .font(AppTypography.body2)
-                        .foregroundColor(Color.appTextSecondary)
-                    
-                    Button("Create a group first") {
-                        // TODO: Navigate to create group
+                    if AuthManager.shared.currentUser?.isAdmin == true {
+                        Text("No groups available")
+                            .font(AppTypography.body2)
+                            .foregroundColor(Color.appTextSecondary)
+                    } else {
+                        Text("You need to be a group admin to create events")
+                            .font(AppTypography.body2)
+                            .foregroundColor(Color.appTextSecondary)
+                            .multilineTextAlignment(.center)
                     }
-                    .buttonStyle(SecondaryButtonStyle())
                 }
                 .frame(maxWidth: .infinity)
                 .padding(AppSpacing.lg)
@@ -277,6 +278,7 @@ struct CreateEventView: View {
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
     }
+}
 
 
 // MARK: - Supporting Views
