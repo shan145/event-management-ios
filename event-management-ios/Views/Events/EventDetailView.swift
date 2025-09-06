@@ -45,7 +45,9 @@ struct EventDetailView: View {
         }
         .overlay(actionButtonsOverlay)
         .sheet(isPresented: $showingEditSheet) {
-            EditEventView(event: event)
+            EditEventView(event: event) {
+                viewModel.loadEventDetails(eventId: event.id)
+            }
         }
         .sheet(isPresented: $showingAttendeeManagement) {
             EventAttendeeManagementView(event: event)
@@ -83,11 +85,11 @@ struct EventDetailView: View {
                     .foregroundColor(.secondary)
             }
             
-            if let location = event.location, !location.isEmpty {
+            if let location = event.location, !location.name.isEmpty {
                 HStack {
-                    Image(systemName: "location")
+                    Image(systemName: "mappin")
                         .foregroundColor(.green)
-                    Text(location)
+                    Text(location.name)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

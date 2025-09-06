@@ -1,0 +1,232 @@
+{
+  "source": "/Users/samuelhan/Desktop/src/us-eventify/event-management-ios/event-management-ios/Views/Dashboard/DashboardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Welcome back, %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 12
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manage your groups and events, join waitlists, and stay connected with your community.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 17
+        }
+      },
+      {
+        "comment": "",
+        "key": "My Groups",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 32
+        }
+      },
+      {
+        "comment": "",
+        "key": "My Events",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 45
+        }
+      },
+      {
+        "comment": "",
+        "key": "My Groups",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 88
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld groups",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "My Events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 155
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld event%@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 162
+        }
+      },
+      {
+        "comment": "",
+        "key": "Leave Group",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 387
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld members",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 257
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 266
+        }
+      },
+      {
+        "comment": "",
+        "key": "View Members",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 297
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Event",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 312
+        }
+      },
+      {
+        "comment": "",
+        "key": "Invite",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 325
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manage Members",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 338
+        }
+      },
+      {
+        "comment": "",
+        "key": "Leave Group",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 352
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 388
+        }
+      },
+      {
+        "comment": "",
+        "key": "Leave",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 389
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to leave \"%@\"? You will need to be re-invited to rejoin.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 395
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Event",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 578
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld total (%lld going)",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 485
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld waitlisted",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 494
+        }
+      },
+      {
+        "comment": "",
+        "key": "Joining...",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 517
+        }
+      },
+      {
+        "comment": "",
+        "key": "Join Waitlist",
+        "location": {
+          "startingColumn": 65,
+          "startingLine": 517
+        }
+      },
+      {
+        "comment": "",
+        "key": "View Attendees",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 531
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 579
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 582
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to delete this event? This action cannot be undone.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 584
+        }
+      }
+    ]
+  },
+  "version": 1
+}

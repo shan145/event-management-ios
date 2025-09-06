@@ -1,0 +1,56 @@
+{
+  "source": "/Users/samuelhan/Desktop/src/us-eventify/event-management-ios/event-management-ios/Views/Groups/EditGroupView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Edit Group",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 18
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 11
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 24
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Group",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 34
+        }
+      },
+      {
+        "comment": "",
+        "key": "Group: %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 37
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit functionality coming soon...",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 40
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,152 @@
+{
+  "source": "/Users/samuelhan/Desktop/src/us-eventify/event-management-ios/event-management-ios/Views/Notifications/NotificationsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Notifications",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 11
+        }
+      },
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 18
+        }
+      },
+      {
+        "comment": "",
+        "key": "Mark All Read",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 24
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Notifications",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 44
+        }
+      },
+      {
+        "comment": "",
+        "key": "You're all caught up! Check back later for updates about your events and groups.",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld unread",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notification Settings",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 215
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 208
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notification Settings",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 232
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notifications Enabled",
+        "location": {
+          "startingColumn": 73,
+          "startingLine": 241
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notifications Disabled",
+        "location": {
+          "startingColumn": 99,
+          "startingLine": 241
+        }
+      },
+      {
+        "comment": "",
+        "key": "You'll receive notifications for important updates",
+        "location": {
+          "startingColumn": 73,
+          "startingLine": 245
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enable notifications to stay updated",
+        "location": {
+          "startingColumn": 128,
+          "startingLine": 245
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notification Preferences",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 271
+        }
+      },
+      {
+        "comment": "",
+        "key": "Event Reminders",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 276
+        }
+      },
+      {
+        "comment": "",
+        "key": "Group Updates",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 279
+        }
+      },
+      {
+        "comment": "",
+        "key": "Email Notifications",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 282
+        }
+      },
+      {
+        "comment": "",
+        "key": "Push Notifications",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 285
+        }
+      }
+    ]
+  },
+  "version": 1
+}

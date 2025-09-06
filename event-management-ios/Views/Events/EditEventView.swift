@@ -2,9 +2,14 @@ import SwiftUI
 
 struct EditEventView: View {
     let event: Event
+    let onEventUpdated: (() -> Void)?
     @StateObject private var viewModel = EditEventViewModel()
     @Environment(\.presentationMode) var presentationMode
-    @State private var showingDeleteAlert = false
+    
+    init(event: Event, onEventUpdated: (() -> Void)? = nil) {
+        self.event = event
+        self.onEventUpdated = onEventUpdated
+    }
     
     var body: some View {
         VStack {
@@ -20,7 +25,7 @@ struct EditEventView: View {
                 
                 Spacer()
                 
-                saveDeleteButtons
+                saveButton
             }
             .padding(.horizontal)
             .padding(.top)
@@ -48,17 +53,6 @@ struct EditEventView: View {
                     date: $viewModel.selectedTime,
                     isDate: false
                 )
-            }
-            .alert("Delete Event", isPresented: $showingDeleteAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    Task {
-                        await viewModel.deleteEvent(eventId: event.id)
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to delete this event? This action cannot be undone.")
             }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK") { }
@@ -133,10 +127,6 @@ struct EditEventView: View {
             
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Max Attendees")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
                     AppTextField(
                         title: "Max Attendees",
                         placeholder: "No limit",
@@ -145,10 +135,6 @@ struct EditEventView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Additional Guests")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
                     AppTextField(
                         title: "Additional Guests",
                         placeholder: "0",
@@ -176,21 +162,17 @@ struct EditEventView: View {
         }
     }
     
-    private var saveDeleteButtons: some View {
-        HStack {
-            Button("Delete") {
-                showingDeleteAlert = true
-            }
-            .foregroundColor(.red)
-            
-            Button("Save") {
-                Task {
-                    await viewModel.updateEvent(eventId: event.id)
+    private var saveButton: some View {
+        Button("Save") {
+            Task {
+                await viewModel.updateEvent(eventId: event.id)
+                if viewModel.errorMessage == nil {
+                    onEventUpdated?()
                     presentationMode.wrappedValue.dismiss()
                 }
             }
-            .disabled(!viewModel.isValid || viewModel.isLoading)
         }
+        .disabled(!viewModel.isValid || viewModel.isLoading)
     }
     
     private var eventDetailsSection: some View {

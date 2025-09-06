@@ -10,91 +10,75 @@ struct SignupView: View {
     @State private var isLoading = false
     
     var body: some View {
-        ZStack {
-            Color.appBackground
-                .ignoresSafeArea()
+        VStack(spacing: AppSpacing.xl) {
+            Spacer()
             
-            VStack(spacing: AppSpacing.xl) {
-                Spacer()
+            // Title section
+            VStack(spacing: AppSpacing.sm) {
+                Text("Create your account")
+                    .font(AppTypography.h3)
+                    .foregroundColor(Color.appTextPrimary)
+                    .fontWeight(.bold)
                 
-                // Title section
-                VStack(spacing: AppSpacing.sm) {
-                    Text("Create your account")
-                        .font(AppTypography.h3)
-                        .foregroundColor(Color.appTextPrimary)
+                Text("Get started with Eventify today")
+                    .font(AppTypography.body2)
+                    .foregroundColor(Color.appTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            
+            // Form section
+            VStack(spacing: AppSpacing.lg) {
+                VStack(spacing: AppSpacing.md) {
+                    AppTextField(
+                        title: "First Name",
+                        placeholder: "Enter your first name",
+                        text: $firstName,
+                        validation: validateFirstName
+                    )
                     
-                    Text("Get started with Eventify today")
-                        .font(AppTypography.body2)
-                        .foregroundColor(Color.appTextSecondary)
-                        .multilineTextAlignment(.center)
-                }
-                
-                // Form section
-                VStack(spacing: AppSpacing.lg) {
-                    VStack(spacing: AppSpacing.md) {
-                        AppTextField(
-                            title: "First Name",
-                            placeholder: "Enter your first name",
-                            text: $firstName,
-                            validation: validateFirstName
-                        )
-                        
-                        AppTextField(
-                            title: "Last Name",
-                            placeholder: "Enter your last name",
-                            text: $lastName,
-                            validation: validateLastName
-                        )
-                        
-                        AppTextField(
-                            title: "Email",
-                            placeholder: "Enter your email",
-                            text: $email,
-                            validation: validateEmail
-                        )
-                        
-                        AppTextField(
-                            title: "Password",
-                            placeholder: "Create a password",
-                            text: $password,
-                            isSecure: true,
-                            validation: validatePassword
-                        )
-                        
-                        AppTextField(
-                            title: "Confirm Password",
-                            placeholder: "Confirm your password",
-                            text: $confirmPassword,
-                            isSecure: true,
-                            validation: validateConfirmPassword
-                        )
-                    }
+                    AppTextField(
+                        title: "Last Name",
+                        placeholder: "Enter your last name",
+                        text: $lastName,
+                        validation: validateLastName
+                    )
                     
-                    AppButton(
-                        title: "Create account",
-                        action: handleSignup,
-                        isLoading: isLoading
+                    AppTextField(
+                        title: "Email",
+                        placeholder: "Enter your email",
+                        text: $email,
+                        validation: validateEmail
+                    )
+                    
+                    AppTextField(
+                        title: "Password",
+                        placeholder: "Create a password",
+                        text: $password,
+                        isSecure: true,
+                        validation: validatePassword
+                    )
+                    
+                    AppTextField(
+                        title: "Confirm Password",
+                        placeholder: "Confirm your password",
+                        text: $confirmPassword,
+                        isSecure: true,
+                        validation: validateConfirmPassword
                     )
                 }
                 
-                Spacer()
-                
-                // Sign in link
-                HStack {
-                    Text("Already have an account?")
-                        .font(AppTypography.body2)
-                        .foregroundColor(Color.appTextSecondary)
-                    
-                    Button("Sign in") {
-                        // Navigation will be handled by parent view
-                    }
-                    .buttonStyle(TextButtonStyle())
-                    .font(AppTypography.body2)
-                    .fontWeight(.semibold)
-                }
+                AppButton(
+                    title: "Create account",
+                    action: handleSignup,
+                    isLoading: isLoading
+                )
             }
-            .padding(.horizontal, AppSpacing.xl)
+            
+            Spacer()
+            
+            // Sign in link removed - handled by parent AuthenticationView
         }
+        .padding(.horizontal, AppSpacing.xl)
     }
     
     private func handleSignup() {
@@ -188,8 +172,6 @@ struct SignupView: View {
         return nil
     }
 }
-
-
 
 #Preview {
     SignupView()

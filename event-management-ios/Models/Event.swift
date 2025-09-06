@@ -4,15 +4,19 @@ import Foundation
 struct PopulatedGroup: Codable, Equatable {
     let id: String
     let name: String
-    let members: [User]?
-    let adminId: User?
+    let members: [String]?  // Array of user IDs as strings per API docs
     
     enum CodingKeys: String, CodingKey {
         case id = "_id"
         case name
         case members
-        case adminId
     }
+}
+
+// Location structure for events
+struct EventLocation: Codable, Equatable {
+    let name: String
+    let url: String?
 }
 
 // Enum to handle event group as either Group object, PopulatedGroup, or string ID
@@ -27,19 +31,37 @@ enum EventGroup: Codable, Equatable {
         print("🔍 EventGroup decoder - attempting to decode groupId")
         
         // Try to decode as PopulatedGroup first (most common case)
-        if let populatedGroup = try? container.decode(PopulatedGroup.self) {
-            print("✅ EventGroup decoded as PopulatedGroup")
+        do {
+            let populatedGroup = try container.decode(PopulatedGroup.self)
+            print("✅ EventGroup decoded as PopulatedGroup: \(populatedGroup.name)")
             self = .populatedGroup(populatedGroup)
-        } else if let group = try? container.decode(Group.self) {
-            print("✅ EventGroup decoded as Group")
-            self = .group(group)
-        } else if let id = try? container.decode(String.self) {
-            print("✅ EventGroup decoded as String ID")
-            self = .id(id)
-        } else {
-            print("❌ EventGroup decoder failed - could not decode as any expected type")
-            throw DecodingError.typeMismatch(EventGroup.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected PopulatedGroup, Group object, or String ID"))
+            return
+        } catch {
+            print("🔍 PopulatedGroup decode failed: \(error)")
         }
+        
+        // Try Group next
+        do {
+            let group = try container.decode(Group.self)
+            print("✅ EventGroup decoded as Group: \(group.name)")
+            self = .group(group)
+            return
+        } catch {
+            print("🔍 Group decode failed: \(error)")
+        }
+        
+        // Try String ID last
+        do {
+            let id = try container.decode(String.self)
+            print("✅ EventGroup decoded as String ID: \(id)")
+            self = .id(id)
+            return
+        } catch {
+            print("🔍 String decode failed: \(error)")
+        }
+        
+        print("❌ EventGroup decoder failed - could not decode as any expected type")
+        throw DecodingError.typeMismatch(EventGroup.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected PopulatedGroup, Group object, or String ID"))
     }
     
     func encode(to encoder: Encoder) throws {
@@ -145,7 +167,7 @@ struct Event: Codable, Identifiable, Equatable {
     let id: String
     let title: String
     let description: String?
-    let location: String?
+    let location: EventLocation?
     let date: String
     let time: String
     let maxAttendees: Int?
@@ -164,7 +186,17 @@ struct Event: Codable, Identifiable, Equatable {
         id = try container.decode(String.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
         description = try container.decodeIfPresent(String.self, forKey: .description)
-        location = try container.decodeIfPresent(String.self, forKey: .location)
+        
+        // Handle location as either EventLocation object or String (for backward compatibility)
+        if let locationObject = try? container.decode(EventLocation.self, forKey: .location) {
+            location = locationObject
+        } else if let locationString = try? container.decode(String.self, forKey: .location) {
+            // Convert string to EventLocation for backward compatibility
+            location = EventLocation(name: locationString, url: nil)
+        } else {
+            location = nil
+        }
+        
         date = try container.decode(String.self, forKey: .date)
         time = try container.decode(String.self, forKey: .time)
         maxAttendees = try container.decodeIfPresent(Int.self, forKey: .maxAttendees)
@@ -236,6 +268,84 @@ struct Event: Codable, Identifiable, Equatable {
         return time
     }
     
+    var formattedDateTime: String {
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "MMM d, yyyy h:mm a"
+        outputFormatter.locale = Locale(identifier: "en_US")
+        outputFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        
+        // First, try to parse the date field as an ISO timestamp (which seems to be the case)
+        let isoFormatters = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        ]
+        
+        // Try parsing the date field as ISO timestamp
+        for format in isoFormatters {
+            let inputFormatter = DateFormatter()
+            inputFormatter.dateFormat = format
+            inputFormatter.timeZone = TimeZone(identifier: "UTC")
+            
+            if let parsedDate = inputFormatter.date(from: date) {
+                return outputFormatter.string(from: parsedDate) + " ET"
+            }
+        }
+        
+        // If the date field is not ISO, try combining date and time
+        let dateTime = "\(date) \(time)"
+        let combinedFormatters = [
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-dd HH:mm:ss"
+        ]
+        
+        for format in combinedFormatters {
+            let inputFormatter = DateFormatter()
+            inputFormatter.dateFormat = format
+            inputFormatter.timeZone = TimeZone(identifier: "UTC")
+            
+            if let parsedDate = inputFormatter.date(from: dateTime) {
+                return outputFormatter.string(from: parsedDate) + " ET"
+            }
+        }
+        
+        // Try parsing date and time separately as a fallback
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+        
+        if let parsedDate = dateFormatter.date(from: date),
+           let parsedTime = timeFormatter.date(from: time) {
+            
+            let calendar = Calendar.current
+            let dateComponents = calendar.dateComponents([.year, .month, .day], from: parsedDate)
+            let timeComponents = calendar.dateComponents([.hour, .minute], from: parsedTime)
+            
+            var combinedComponents = DateComponents()
+            combinedComponents.year = dateComponents.year
+            combinedComponents.month = dateComponents.month
+            combinedComponents.day = dateComponents.day
+            combinedComponents.hour = timeComponents.hour
+            combinedComponents.minute = timeComponents.minute
+            
+            if calendar.date(from: combinedComponents) != nil {
+                // Assume the original time is in UTC and convert to ET
+                var utcCalendar = Calendar.current
+                utcCalendar.timeZone = TimeZone(identifier: "UTC")!
+                if let utcDate = utcCalendar.date(from: combinedComponents) {
+                    return outputFormatter.string(from: utcDate) + " ET"
+                }
+            }
+        }
+        
+        // Final fallback
+        return "\(formattedDate) \(formattedTime) ET"
+    }
+    
     var isUnlimited: Bool {
         maxAttendees == nil
     }
@@ -255,7 +365,7 @@ struct Event: Codable, Identifiable, Equatable {
         id: "sample-event-id",
         title: "Sample Event",
         description: "This is a sample event description",
-        location: "Sample Location",
+        location: EventLocation(name: "Sample Location", url: nil),
         date: "2024-01-15",
         time: "14:00",
         maxAttendees: 50,
@@ -270,7 +380,7 @@ struct Event: Codable, Identifiable, Equatable {
     )
     
     // Custom initializer for creating Event instances
-    init(id: String, title: String, description: String?, location: String?, date: String, time: String, maxAttendees: Int?, guests: Int, groupId: EventGroup, createdBy: EventCreator, createdAt: String?, updatedAt: String?, goingList: [User]?, waitlist: [User]?, noGoList: [User]?) {
+    init(id: String, title: String, description: String?, location: EventLocation?, date: String, time: String, maxAttendees: Int?, guests: Int, groupId: EventGroup, createdBy: EventCreator, createdAt: String?, updatedAt: String?, goingList: [User]?, waitlist: [User]?, noGoList: [User]?) {
         self.id = id
         self.title = title
         self.description = description

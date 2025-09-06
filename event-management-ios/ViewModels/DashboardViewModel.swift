@@ -45,26 +45,32 @@ class DashboardViewModel: ObservableObject {
     }
     
     private func loadUpcomingEvents() async throws -> [Event] {
-        print("🔍 Loading upcoming events...")
-        let response = try await apiService.getEvents()
+        print("🔍 Loading user events...")
+        let response = try await apiService.getUserEvents()
         let events = response.data.events
-        print("✅ All events loaded: \(events.count) events")
+        print("✅ User events loaded: \(events.count) events")
         
-        // Filter for upcoming events (today and future)
-        let today = Date()
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        
-        let upcomingEvents = events.filter { event in
-            guard let eventDate = formatter.date(from: event.date) else { return false }
-            return eventDate >= today
-        }.sorted { event1, event2 in
-            guard let date1 = formatter.date(from: event1.date),
-                  let date2 = formatter.date(from: event2.date) else { return false }
-            return date1 < date2
+        // No filtering - show all user events
+        print("🔍 Total events loaded from API: \(events.count)")
+        events.forEach { event in
+            print("🔍 Event: '\(event.title)' - Date: '\(event.date)' - GroupId: \(event.groupId)")
         }
         
-        print("✅ Upcoming events filtered: \(upcomingEvents.count) events")
+        // Return all events without any filtering, sorted by date (newest first)
+        let upcomingEvents = events.sorted { event1, event2 in
+            // Sort by date if possible, otherwise by title
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            
+            if let date1 = formatter.date(from: event1.date),
+               let date2 = formatter.date(from: event2.date) {
+                return date1 > date2  // Newest first
+            } else {
+                return event1.title < event2.title  // Fallback to alphabetical
+            }
+        }
+        
+        print("✅ All user events: \(upcomingEvents.count) events")
         return upcomingEvents
     }
     

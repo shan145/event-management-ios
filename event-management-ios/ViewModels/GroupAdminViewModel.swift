@@ -26,21 +26,45 @@ class GroupAdminViewModel: ObservableObject {
             let response = try await apiService.getGroup(id: groupId)
             
             members = response.data.group.members ?? []
-            // Combine main admin and group admins
+            // Combine main admin and group admins (deduplicate by user ID)
             var allAdmins: [User] = []
+            var adminIds: Set<String> = []
+            
+            // Add main admin first
             if let mainAdmin = response.data.group.adminId {
                 allAdmins.append(mainAdmin)
+                adminIds.insert(mainAdmin.id)
             }
+            
+            // Add group admins, but skip if already added as main admin
             if let groupAdmins = response.data.group.groupAdmins {
-                // Extract User objects from GroupAdmin enum
-                let groupAdminUsers = groupAdmins.compactMap { $0.user }
-                allAdmins.append(contentsOf: groupAdminUsers)
+                for groupAdmin in groupAdmins {
+                    switch groupAdmin {
+                    case .user(let user):
+                        if !adminIds.contains(user.id) {
+                            allAdmins.append(user)
+                            adminIds.insert(user.id)
+                        }
+                    case .id(let userId):
+                        if !adminIds.contains(userId) {
+                            // If we only have an ID, we need to find the User object from members
+                            if let userFromMembers = members.first(where: { $0.id == userId }) {
+                                allAdmins.append(userFromMembers)
+                                adminIds.insert(userId)
+                            } else {
+                                // Create a basic User object with just the ID if not found in members
+                                // This shouldn't happen in normal operation, but provides fallback
+                                print("Warning: Group admin with ID \(userId) not found in members list")
+                            }
+                        }
+                    }
+                }
             }
             admins = allAdmins
             
-            // Load pending invites
-            let invitesResponse = try await apiService.getGroupInvites(groupId: groupId)
-            pendingInvites = invitesResponse.data.invites
+            // Note: This server doesn't have a pending invites system
+            // It uses invite tokens instead
+            pendingInvites = []
             
             // Load group settings
             loadGroupSettings(response.data.group)
@@ -57,7 +81,7 @@ class GroupAdminViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let response = try await apiService.removeGroupMember(userId: userId, groupId: groupId)
+            let _ = try await apiService.removeGroupMember(userId: userId, groupId: groupId)
             
             // Refresh group data
             await loadGroupData(groupId: groupId)
@@ -70,23 +94,11 @@ class GroupAdminViewModel: ObservableObject {
         isLoading = false
     }
     
+    // Note: This server doesn't support revoking individual invites
+    // It uses invite tokens that don't expire
     func revokeInvite(inviteId: String, groupId: String) async {
-        isLoading = true
-        errorMessage = nil
-        
-        do {
-            let response = try await apiService.revokeGroupInvite(inviteId: inviteId, groupId: groupId)
-            
-            // Refresh invites
-            let invitesResponse = try await apiService.getGroupInvites(groupId: groupId)
-            pendingInvites = invitesResponse.data.invites
-            
-            showSuccess = true
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        
-        isLoading = false
+        // This functionality is not supported by the current server
+        errorMessage = "Invite revocation is not supported. Use member management instead."
     }
     
     func updateGroupSettings(groupId: String) async {
@@ -100,7 +112,7 @@ class GroupAdminViewModel: ObservableObject {
                 isPublicGroup: isPublicGroup
             )
             
-            let response = try await apiService.updateGroupSettings(groupId: groupId, settings: settings)
+            let _ = try await apiService.updateGroupSettings(groupId: groupId, settings: settings)
             
             showSuccess = true
         } catch {
@@ -115,7 +127,70 @@ class GroupAdminViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let response = try await apiService.deleteGroup(id: groupId)
+            let _ = try await apiService.deleteGroup(id: groupId)
+            showSuccess = true
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        
+        isLoading = false
+    }
+    
+    func searchUserByEmail(email: String) async -> User? {
+        guard !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        
+        do {
+            let response = try await apiService.searchUserByEmail(email: email.trimmingCharacters(in: .whitespacesAndNewlines))
+            return response.data.user
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+    
+    func addMemberByEmail(email: String, groupId: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let _ = try await apiService.addGroupMember(email: email, groupId: groupId)
+            
+            // Refresh group data
+            await loadGroupData(groupId: groupId)
+            showSuccess = true
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        
+        isLoading = false
+    }
+    
+    func makeUserAdmin(userId: String, groupId: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let _ = try await apiService.addGroupAdmin(userId: userId, groupId: groupId)
+            
+            // Refresh group data
+            await loadGroupData(groupId: groupId)
+            showSuccess = true
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        
+        isLoading = false
+    }
+    
+    func removeUserAdmin(userId: String, groupId: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let _ = try await apiService.removeGroupAdmin(userId: userId, groupId: groupId)
+            
+            // Refresh group data
+            await loadGroupData(groupId: groupId)
             showSuccess = true
         } catch {
             errorMessage = error.localizedDescription

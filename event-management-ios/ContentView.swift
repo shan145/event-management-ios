@@ -21,8 +21,8 @@ struct ContentView: View {
                 AuthenticationView()
             }
         }
-        .onChange(of: authManager.errorMessage) { errorMessage in
-            showErrorAlert = errorMessage != nil
+        .onChange(of: authManager.errorMessage) { _, errorMessage in
+            showErrorAlert = (errorMessage != nil)
         }
         .alert("Error", isPresented: $showErrorAlert) {
             Button("OK") {
@@ -41,19 +41,6 @@ struct AuthenticationView: View {
     
     var body: some View {
         VStack(spacing: AppSpacing.xl) {
-            // Logo/Header
-            VStack(spacing: AppSpacing.md) {
-                Image(systemName: "calendar.badge.plus")
-                    .font(.system(size: 64))
-                    .foregroundColor(Color.appPrimary)
-                
-                Text("Organize and manage your events with ease")
-                    .font(AppTypography.body2)
-                    .foregroundColor(Color.appTextSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.top, AppSpacing.xxl)
-            
             Spacer()
             
             // Auth Forms
@@ -66,12 +53,22 @@ struct AuthenticationView: View {
             Spacer()
             
             // Toggle between login/signup
-            Button(isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in") {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    isLogin.toggle()
+            VStack(spacing: AppSpacing.sm) {
+                Divider()
+                    .background(Color.appTextSecondary.opacity(0.3))
+                
+                Button(isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in") {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isLogin.toggle()
+                    }
                 }
+                .buttonStyle(TextButtonStyle())
+                .font(AppTypography.body2)
+                .fontWeight(.medium)
+                .foregroundColor(Color.appPrimary)
+                .padding(.vertical, AppSpacing.sm)
+                .contentShape(Rectangle())
             }
-            .buttonStyle(TextButtonStyle())
             .padding(.bottom, AppSpacing.lg)
         }
         .padding(.horizontal, AppSpacing.lg)
@@ -82,34 +79,22 @@ struct AuthenticationView: View {
 struct MainTabView: View {
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var notificationService = NotificationService.shared
+    @StateObject private var dashboardViewModel = DashboardViewModel()
     
     var body: some View {
         TabView {
-            // Show appropriate dashboard based on user role
-            if authManager.currentUser?.isAdmin == true {
-                AdminDashboardView()
-                    .tabItem {
-                        Image(systemName: "shield")
-                        Text("Admin")
-                    }
-            } else {
-                DashboardView()
-                    .tabItem {
-                        Image(systemName: "house")
-                        Text("Dashboard")
-                    }
-            }
-            
-            EventsView()
-                .tabItem {
-                    Image(systemName: "calendar")
-                    Text("Events")
-                }
-            
             GroupsView()
+                .environmentObject(dashboardViewModel)
                 .tabItem {
                     Image(systemName: "person.3")
                     Text("Groups")
+                }
+            
+            EventsView()
+                .environmentObject(dashboardViewModel)
+                .tabItem {
+                    Image(systemName: "calendar")
+                    Text("Events")
                 }
             
             NotificationsView()
@@ -145,9 +130,6 @@ struct MainTabView: View {
         notificationService.unreadCount
     }
 }
-
-// MARK: - Settings View (Legacy - keeping for reference)
-// The new SettingsView is now in Views/Settings/SettingsView.swift
 
 #Preview {
     ContentView()

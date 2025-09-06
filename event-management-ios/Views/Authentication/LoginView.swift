@@ -8,83 +8,62 @@ struct LoginView: View {
     @State private var showingForgotPassword = false
     
     var body: some View {
-        ZStack {
-            Color.appBackground
-                .ignoresSafeArea()
+        VStack(spacing: AppSpacing.xl) {
+            Spacer()
             
-            VStack(spacing: AppSpacing.xl) {
-                Spacer()
+            // Welcome section
+            VStack(spacing: AppSpacing.md) {
+                Text("Welcome back")
+                    .font(AppTypography.h3)
+                    .foregroundColor(Color.appTextPrimary)
+                    .fontWeight(.bold)
                 
-                // Brand and welcome section
-                VStack(spacing: AppSpacing.lg) {
-                    Text("Eventify")
-                        .font(AppTypography.h1)
-                        .foregroundColor(Color.appTextPrimary)
-                        .fontWeight(.bold)
-                    
-                    VStack(spacing: AppSpacing.sm) {
-                        Text("Welcome back")
-                            .font(AppTypography.h3)
-                            .foregroundColor(Color.appTextPrimary)
-                        
-                        Text("Sign in to your account to continue")
-                            .font(AppTypography.body2)
-                            .foregroundColor(Color.appTextSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                
-                // Form section
-                VStack(spacing: AppSpacing.lg) {
-                    VStack(spacing: AppSpacing.md) {
-                        AppTextField(
-                            title: "Email",
-                            placeholder: "Enter your email",
-                            text: $email,
-                            validation: validateEmail
-                        )
-                        
-                        AppTextField(
-                            title: "Password",
-                            placeholder: "Enter your password",
-                            text: $password,
-                            isSecure: true,
-                            validation: validatePassword
-                        )
-                    }
-                    
-                    AppButton(
-                        title: "Sign in",
-                        action: handleLogin,
-                        isLoading: isLoading
+                Text("Sign in to your account to continue")
+                    .font(AppTypography.body2)
+                    .foregroundColor(Color.appTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            
+            // Form section
+            VStack(spacing: AppSpacing.lg) {
+                VStack(spacing: AppSpacing.md) {
+                    AppTextField(
+                        title: "Email",
+                        placeholder: "Enter your email",
+                        text: $email,
+                        validation: validateEmail
                     )
                     
-                    Button("Forgot your password?") {
-                        showingForgotPassword = true
-                    }
-                    .buttonStyle(TextButtonStyle())
+                    AppTextField(
+                        title: "Password",
+                        placeholder: "Enter your password",
+                        text: $password,
+                        isSecure: true,
+                        validation: validatePassword
+                    )
                 }
                 
-                Spacer()
+                AppButton(
+                    title: "Sign in",
+                    action: handleLogin,
+                    isLoading: isLoading
+                )
                 
-                // Sign up link
-                HStack {
-                    Text("Don't have an account?")
-                        .font(AppTypography.body2)
-                        .foregroundColor(Color.appTextSecondary)
-                    
-                    Button("Sign up") {
-                        // Navigation will be handled by parent view
-                    }
-                    .buttonStyle(TextButtonStyle())
-                    .font(AppTypography.body2)
-                    .fontWeight(.semibold)
+                Button("Forgot your password?") {
+                    showingForgotPassword = true
                 }
+                .buttonStyle(TextButtonStyle())
             }
-            .padding(.horizontal, AppSpacing.xl)
+            
+            Spacer()
+            
+            // Sign up link removed - handled by parent AuthenticationView
         }
+        .padding(.horizontal, AppSpacing.xl)
         .sheet(isPresented: $showingForgotPassword) {
             ForgotPasswordView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
     }
     

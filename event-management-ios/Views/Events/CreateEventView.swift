@@ -6,6 +6,12 @@ struct CreateEventView: View {
     @State private var showDatePicker = false
     @State private var showTimePicker = false
     
+    let preSelectedGroup: Group?
+    
+    init(preSelectedGroup: Group? = nil) {
+        self.preSelectedGroup = preSelectedGroup
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -17,8 +23,12 @@ struct CreateEventView: View {
                     // Event Details Section
                     eventDetailsSection
                     
-                    // Group Selection Section
-                    groupSelectionSection
+                    // Group Selection Section (only show if no pre-selected group)
+                    if preSelectedGroup == nil {
+                        groupSelectionSection
+                    } else {
+                        preSelectedGroupSection
+                    }
                     
                     // Date & Time Section
                     dateTimeSection
@@ -43,7 +53,11 @@ struct CreateEventView: View {
         .background(Color.appBackground)
         .ignoresSafeArea(.container, edges: .bottom)
         .task {
-            await viewModel.loadAvailableGroups()
+            if let preSelectedGroup = preSelectedGroup {
+                viewModel.setPreSelectedGroup(preSelectedGroup)
+            } else {
+                await viewModel.loadAvailableGroups()
+            }
         }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { }
@@ -154,6 +168,42 @@ struct CreateEventView: View {
                 .pickerStyle(MenuPickerStyle())
                 .padding(AppSpacing.md)
                 .background(Color.grey50)
+                .cornerRadius(AppCornerRadius.medium)
+            }
+        }
+        .padding(AppSpacing.xl)
+        .background(Color.appSurface)
+        .cornerRadius(AppCornerRadius.large)
+        .appShadow(AppShadows.small)
+    }
+    
+    private var preSelectedGroupSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            Text("Group")
+                .font(AppTypography.h4)
+                .foregroundColor(Color.appTextPrimary)
+            
+            if let group = preSelectedGroup {
+                HStack(spacing: AppSpacing.md) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(Color.statusGoing)
+                    
+                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                        Text(group.name)
+                            .font(AppTypography.body1)
+                            .foregroundColor(Color.appTextPrimary)
+                            .fontWeight(.medium)
+                        
+                        Text("Event will be created for this group")
+                            .font(AppTypography.body2)
+                            .foregroundColor(Color.appTextSecondary)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(AppSpacing.lg)
+                .background(Color.statusGoing.opacity(0.1))
                 .cornerRadius(AppCornerRadius.medium)
             }
         }

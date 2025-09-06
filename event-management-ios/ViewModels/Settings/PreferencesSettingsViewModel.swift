@@ -41,9 +41,11 @@ class PreferencesSettingsViewModel: ObservableObject {
                 showEmailToGroupMembers: showEmailToGroupMembers
             )
             
-            let response = try await apiService.updatePreferences(preferences: preferences)
+            // TODO: Implement preferences endpoint on server
+            // let response = try await apiService.updatePreferences(preferences: preferences)
             
             showSuccess = true
+            errorMessage = "Preferences update not yet implemented on server"
         } catch {
             errorMessage = error.localizedDescription
         }

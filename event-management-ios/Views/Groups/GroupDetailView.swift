@@ -4,10 +4,23 @@ struct GroupDetailView: View {
     let group: Group
     @StateObject private var viewModel = GroupDetailViewModel()
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var authManager: AuthManager
+    let onGroupUpdated: (() -> Void)?
+    
+    init(group: Group, onGroupUpdated: (() -> Void)? = nil) {
+        self.group = group
+        self.onGroupUpdated = onGroupUpdated
+    }
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
+    @State private var showingLeaveAlert = false
     @State private var showingInviteSheet = false
     @State private var showingGroupAdminSheet = false
+    
+    private var canManageGroup: Bool {
+        guard let currentUser = authManager.currentUser else { return false }
+        return currentUser.isAdminOfGroup(group.id)
+    }
     
     var body: some View {
         ScrollView {
@@ -83,7 +96,7 @@ struct GroupDetailView: View {
                             
                             Spacer()
                             
-                            if group.isAdmin {
+                            if canManageGroup {
                                 Button("Manage") {
                                     showingGroupAdminSheet = true
                                 }
@@ -96,8 +109,7 @@ struct GroupDetailView: View {
                             ForEach(members, id: \.id) { member in
                                 MemberRow(
                                     member: member,
-                                    isAdmin: (group.adminId?.id == member.id) || (group.groupAdmins?.contains(where: { $0.id == member.id }) ?? false),
-                                    canManage: group.isAdmin
+                                    isAdmin: (group.adminId?.id == member.id) || (group.groupAdmins?.contains(where: { $0.id == member.id }) ?? false)
                                 )
                             }
                         }
@@ -114,7 +126,7 @@ struct GroupDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 HStack {
-                    if group.isAdmin {
+                    if canManageGroup {
                         Button("Invite") {
                             showingInviteSheet = true
                         }
@@ -127,45 +139,15 @@ struct GroupDetailView: View {
                             showingDeleteAlert = true
                         }
                         .foregroundColor(.red)
+                    } else {
+                        Button("Leave Group") {
+                            showingLeaveAlert = true
+                        }
+                        .foregroundColor(.red)
                     }
                 }
             }
         }
-        .overlay(
-            VStack {
-                Spacer()
-                
-                // Action Buttons
-                VStack(spacing: 12) {
-                    if group.isAdmin {
-                        // Admin actions
-                        HStack(spacing: 12) {
-                            Button("Create Event") {
-                                // TODO: Navigate to create event
-                            }
-                            .buttonStyle(PrimaryButtonStyle())
-                            
-                            Button("Create Event") {
-                                // TODO: Navigate to create event
-                            }
-                            .buttonStyle(SecondaryButtonStyle())
-                        }
-                    } else {
-                        // Member actions
-                        Button("Leave Group") {
-                            Task {
-                                await viewModel.leaveGroup(groupId: group.id)
-                                presentationMode.wrappedValue.dismiss()
-                            }
-                        }
-                        .buttonStyle(DangerButtonStyle())
-                    }
-                }
-                .padding()
-                .background(Color.white.opacity(0.95))
-                .shadow(radius: 2)
-            }
-        )
         .sheet(isPresented: $showingEditSheet) {
             EditGroupView(group: group)
         }
@@ -176,6 +158,11 @@ struct GroupDetailView: View {
             GroupAdminView(group: group)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+                .onDisappear {
+                    // Refresh group data when admin sheet is dismissed
+                    viewModel.loadGroupDetails(groupId: group.id)
+                    onGroupUpdated?()
+                }
         }
         .alert("Delete Group", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
@@ -188,6 +175,18 @@ struct GroupDetailView: View {
         } message: {
             Text("Are you sure you want to delete this group? This action cannot be undone.")
         }
+        .alert("Leave Group", isPresented: $showingLeaveAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Leave", role: .destructive) {
+                Task {
+                    await viewModel.leaveGroup(groupId: group.id)
+                    presentationMode.wrappedValue.dismiss()
+                    onGroupUpdated?()
+                }
+            }
+        } message: {
+            Text("Are you sure you want to leave \"\(group.name)\"? You will need to be re-invited to rejoin.")
+        }
         .onAppear {
             viewModel.loadGroupDetails(groupId: group.id)
         }
@@ -197,7 +196,6 @@ struct GroupDetailView: View {
 struct MemberRow: View {
     let member: User
     let isAdmin: Bool
-    let canManage: Bool
     
     var body: some View {
         HStack {
@@ -228,28 +226,11 @@ struct MemberRow: View {
                     }
                 }
                 
-                Text(member.email)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Email removed for privacy
             }
             
             Spacer()
             
-            if canManage && !isAdmin {
-                Menu {
-                    Button("Make Admin") {
-                        // TODO: Make admin
-                    }
-                    
-                    Button("Remove from Group") {
-                        // TODO: Remove member
-                    }
-                    .foregroundColor(.red)
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .foregroundColor(.secondary)
-                }
-            }
         }
         .padding(.vertical, 4)
     }

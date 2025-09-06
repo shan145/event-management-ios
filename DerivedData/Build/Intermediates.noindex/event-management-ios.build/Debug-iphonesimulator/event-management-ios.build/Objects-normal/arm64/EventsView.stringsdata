@@ -1,0 +1,24 @@
+{
+  "source": "/Users/samuelhan/Desktop/src/us-eventify/event-management-ios/event-management-ios/Views/Events/EventsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "My Events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 12
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld event%@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 19
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -11,6 +11,7 @@ class CreateEventViewModel: ObservableObject {
     @Published var maxAttendees = ""
     @Published var selectedGroupId = ""
     @Published var availableGroups: [Group] = []
+    @Published var preSelectedGroup: Group? = nil
     @Published var isLoading = false
     @Published var isSuccess = false
     @Published var errorMessage: String?
@@ -36,6 +37,11 @@ class CreateEventViewModel: ObservableObject {
         !selectedGroupId.isEmpty
     }
     
+    func setPreSelectedGroup(_ group: Group) {
+        self.preSelectedGroup = group
+        self.selectedGroupId = group.id
+    }
+    
     func createEvent() async {
         guard isFormValid else { return }
         
@@ -59,7 +65,7 @@ class CreateEventViewModel: ObservableObject {
                 maxAttendeesInt = Int(maxAttendees)
             }
             
-            let response = try await apiService.createEvent(
+            let _ = try await apiService.createEvent(
                 groupId: selectedGroupId,
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 description: description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : description.trimmingCharacters(in: .whitespacesAndNewlines),

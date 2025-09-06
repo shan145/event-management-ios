@@ -18,8 +18,16 @@ class EditEventViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showError = false
     
-    @Published var selectedDate = Date()
-    @Published var selectedTime = Date()
+    @Published var selectedDate = Date() {
+        didSet {
+            date = dateFormatter.string(from: selectedDate)
+        }
+    }
+    @Published var selectedTime = Date() {
+        didSet {
+            time = timeFormatter.string(from: selectedTime)
+        }
+    }
     
     private let apiService = APIService.shared
     private let dateFormatter = DateFormatter()
@@ -30,8 +38,13 @@ class EditEventViewModel: ObservableObject {
     }
     
     private func setupFormatters() {
-        dateFormatter.dateStyle = .medium
-        timeFormatter.timeStyle = .short
+        // Set up date formatter for Eastern Time
+        dateFormatter.dateFormat = "MMM d, yyyy"
+        dateFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        
+        // Set up time formatter for Eastern Time  
+        timeFormatter.dateFormat = "h:mm a"
+        timeFormatter.timeZone = TimeZone(identifier: "America/New_York")
     }
     
     var isValid: Bool {
@@ -43,20 +56,21 @@ class EditEventViewModel: ObservableObject {
     func loadEvent(event: Event) {
         title = event.title
         description = event.description ?? ""
-        location = event.location ?? ""
-        date = event.date
-        time = event.time
+        location = event.location?.name ?? ""
         maxAttendees = event.maxAttendees?.description ?? ""
         guests = "0" // Default value
         notifyGroup = false // Default value
         
-        // Parse existing date and time
-        if let eventDate = parseDate(event.date) {
-            selectedDate = eventDate
-        }
-        
-        if let eventTime = parseTime(event.time) {
-            selectedTime = eventTime
+        // Parse the existing date and time strings
+        if let parsedDateTime = parseEventDateTime(date: event.date, time: event.time) {
+            selectedDate = parsedDateTime
+            selectedTime = parsedDateTime
+            // The didSet observers will automatically update date and time strings
+        } else {
+            // Fallback to current date/time in ET if parsing fails
+            let now = Date()
+            selectedDate = now
+            selectedTime = now
         }
     }
     
@@ -79,8 +93,8 @@ class EditEventViewModel: ObservableObject {
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 description: description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : description.trimmingCharacters(in: .whitespacesAndNewlines),
                 location: location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : location.trimmingCharacters(in: .whitespacesAndNewlines),
-                date: date,
-                time: time,
+                date: formatDateForAPI(),
+                time: formatTimeForAPI(),
                 maxAttendees: maxAttendeesInt,
                 guests: guestsInt
             )
@@ -96,32 +110,59 @@ class EditEventViewModel: ObservableObject {
         isLoading = false
     }
     
-    func deleteEvent(eventId: String) async {
-        isLoading = true
-        errorMessage = nil
+    
+    private func parseEventDateTime(date: String, time: String) -> Date? {
+        // First, try to parse the date as an ISO timestamp (which seems to be the case)
+        let isoFormatters = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        ]
         
-        do {
-            let response = try await apiService.deleteEvent(id: eventId)
-            print("✅ Successfully deleted event: \(response.message)")
+        // Try parsing the date field as ISO timestamp first
+        for format in isoFormatters {
+            let inputFormatter = DateFormatter()
+            inputFormatter.dateFormat = format
+            inputFormatter.timeZone = TimeZone(identifier: "UTC")
             
-        } catch {
-            errorMessage = error.localizedDescription
-            showError = true
-            print("❌ Failed to delete event: \(error)")
+            if let parsedDate = inputFormatter.date(from: date) {
+                return parsedDate
+            }
         }
         
-        isLoading = false
+        // If that fails, try combining date and time strings
+        let dateTime = "\(date) \(time)"
+        let combinedFormatters = [
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-dd HH:mm:ss"
+        ]
+        
+        for format in combinedFormatters {
+            let inputFormatter = DateFormatter()
+            inputFormatter.dateFormat = format
+            inputFormatter.timeZone = TimeZone(identifier: "UTC")
+            
+            if let parsedDate = inputFormatter.date(from: dateTime) {
+                return parsedDate
+            }
+        }
+        
+        return nil
     }
     
-    private func parseDate(_ dateString: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.date(from: dateString)
+    private func formatDateForAPI() -> String {
+        let apiDateFormatter = DateFormatter()
+        apiDateFormatter.dateFormat = "yyyy-MM-dd"
+        apiDateFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        return apiDateFormatter.string(from: selectedDate)
     }
     
-    private func parseTime(_ timeString: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.date(from: timeString)
+    private func formatTimeForAPI() -> String {
+        let apiTimeFormatter = DateFormatter()
+        apiTimeFormatter.dateFormat = "HH:mm"
+        apiTimeFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        return apiTimeFormatter.string(from: selectedTime)
     }
 }

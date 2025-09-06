@@ -51,6 +51,7 @@ struct CreateEventRequest: Codable {
     let title: String
     let description: String?
     let location: String?
+    let locationUrl: String?
     let date: String
     let time: String
     let maxAttendees: Int?
@@ -82,9 +83,14 @@ struct JoinGroupRequest: Codable {
     let userId: String
 }
 
+struct JoinGroupWithTokenRequest: Codable {
+    let inviteToken: String
+}
+
 struct ChangePasswordRequest: Codable {
     let currentPassword: String
     let newPassword: String
+    let confirmPassword: String
 }
 
 struct ForgotPasswordRequest: Codable {
@@ -92,7 +98,9 @@ struct ForgotPasswordRequest: Codable {
 }
 
 struct ResetPasswordRequest: Codable {
-    let password: String
+    let token: String
+    let newPassword: String
+    let confirmPassword: String
 }
 
 
@@ -101,6 +109,7 @@ struct GroupEventRequest: Codable {
     let title: String
     let description: String?
     let location: String?
+    let locationUrl: String?
     let date: String
     let time: String
     let maxAttendees: Int?
@@ -345,6 +354,8 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: GroupResponse.self)
     }
     
+    // Note: Group invite generation may need to be implemented on server
+    // Current implementation may not work as this endpoint doesn't exist in API docs
     func generateGroupInvite(groupId: String) async throws -> GroupInviteResponse {
         let url = URL(string: "\(baseURL)/groups/\(groupId)/invite")!
         let request = createRequest(url: url, method: "POST")
@@ -365,6 +376,12 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: EventsResponse.self)
     }
     
+    func getUserEvents() async throws -> EventsResponse {
+        let url = URL(string: "\(baseURL)/events/user")!
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: EventsResponse.self)
+    }
+    
     func getEvent(id: String) async throws -> EventResponse {
         let url = URL(string: "\(baseURL)/events/\(id)")!
         let request = createRequest(url: url)
@@ -373,10 +390,12 @@ class APIService: ObservableObject {
     
     func createEvent(groupId: String, title: String, description: String?, location: String?, date: String, time: String, maxAttendees: Int?, guests: Int = 0, notifyGroup: Bool = false) async throws -> EventResponse {
         let url = URL(string: "\(baseURL)/groups/\(groupId)/events")!
+        
         let requestBody = CreateEventRequest(
             title: title,
             description: description,
             location: location,
+            locationUrl: nil,
             date: date,
             time: time,
             maxAttendees: maxAttendees,
@@ -410,8 +429,21 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
     
-    func joinEvent(id: String) async throws -> SuccessResponse {
+    func joinEventWaitlist(id: String) async throws -> SuccessResponse {
         let url = URL(string: "\(baseURL)/events/\(id)/join")!
+        let request = createRequest(url: url, method: "POST")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    // Note: Server only has /events/:id/join endpoint, not separate /going endpoint
+    func joinEventGoing(id: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/events/\(id)/join")!
+        let request = createRequest(url: url, method: "POST")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func markEventNotGoing(id: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/events/\(id)/nogo")!
         let request = createRequest(url: url, method: "POST")
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
@@ -433,11 +465,20 @@ class APIService: ObservableObject {
     }
     
     func moveToWaitlist(eventId: String, userId: String) async throws -> SuccessResponse {
-        let url = URL(string: "\(baseURL)/events/\(eventId)/move-to-waitlist")!
+        // First move user to no-go list, then to waitlist
+        // This handles users coming from any state (going, not going)
+        
+        // Step 1: Move to no-go list
+        let nogoUrl = URL(string: "\(baseURL)/events/\(eventId)/nogo")!
         let requestBody = UserIdRequest(userId: userId)
         let body = try JSONEncoder().encode(requestBody)
-        let request = createRequest(url: url, method: "POST", body: body)
-        return try await performRequest(request, responseType: SuccessResponse.self)
+        let nogoRequest = createRequest(url: nogoUrl, method: "POST", body: body)
+        _ = try await performRequest(nogoRequest, responseType: SuccessResponse.self)
+        
+        // Step 2: Move from no-go to waitlist
+        let waitlistUrl = URL(string: "\(baseURL)/events/\(eventId)/move-to-waitlist")!
+        let waitlistRequest = createRequest(url: waitlistUrl, method: "POST", body: body)
+        return try await performRequest(waitlistRequest, responseType: SuccessResponse.self)
     }
     
     // MARK: - Join Group Endpoints
@@ -448,6 +489,15 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: GroupInviteResponse.self)
     }
     
+    func joinGroupWithToken(groupId: String, inviteToken: String) async throws -> JoinGroupResponse {
+        let url = URL(string: "\(baseURL)/groups/\(groupId)/join")!
+        let requestBody = JoinGroupWithTokenRequest(inviteToken: inviteToken)
+        let body = try JSONEncoder().encode(requestBody)
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: JoinGroupResponse.self)
+    }
+    
+    // Keep the old method for backward compatibility with invite links
     func joinGroup(token: String, userId: String) async throws -> JoinGroupResponse {
         let url = URL(string: "\(baseURL)/join/\(token)")!
         let requestBody = JoinGroupRequest(userId: userId)
@@ -459,7 +509,12 @@ class APIService: ObservableObject {
     // MARK: - User Profile Endpoints
     
     func updateProfile(firstName: String, lastName: String) async throws -> UserResponse {
-        let url = URL(string: "\(baseURL)/users/profile")!
+        // Get current user ID from AuthManager
+        guard let currentUserId = await AuthManager.shared.currentUser?.id else {
+            throw APIError.unauthorized
+        }
+        
+        let url = URL(string: "\(baseURL)/users/\(currentUserId)")!
         let requestBody = UpdateUserRequest(
             firstName: firstName,
             lastName: lastName,
@@ -471,22 +526,29 @@ class APIService: ObservableObject {
     }
     
     func changePassword(currentPassword: String, newPassword: String) async throws -> SuccessResponse {
-        let url = URL(string: "\(baseURL)/users/password")!
+        // Get current user ID from AuthManager
+        guard let currentUserId = await AuthManager.shared.currentUser?.id else {
+            throw APIError.unauthorized
+        }
+        
+        let url = URL(string: "\(baseURL)/users/\(currentUserId)/password")!
         let requestBody = ChangePasswordRequest(
             currentPassword: currentPassword,
-            newPassword: newPassword
+            newPassword: newPassword,
+            confirmPassword: newPassword
         )
         let body = try JSONEncoder().encode(requestBody)
         let request = createRequest(url: url, method: "PUT", body: body)
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
     
-    func updatePreferences(preferences: UserPreferences) async throws -> SuccessResponse {
-        let url = URL(string: "\(baseURL)/users/preferences")!
-        let body = try JSONEncoder().encode(preferences)
-        let request = createRequest(url: url, method: "PUT", body: body)
-        return try await performRequest(request, responseType: SuccessResponse.self)
-    }
+    // TODO: Implement preferences endpoint on server
+    // func updatePreferences(preferences: UserPreferences) async throws -> SuccessResponse {
+    //     let url = URL(string: "\(baseURL)/users/preferences")!
+    //     let body = try JSONEncoder().encode(preferences)
+    //     let request = createRequest(url: url, method: "PUT", body: body)
+    //     return try await performRequest(request, responseType: SuccessResponse.self)
+    // }
     
     // MARK: - Notification Endpoints
     
@@ -510,21 +572,45 @@ class APIService: ObservableObject {
     
     // MARK: - Group Admin Endpoints
     
-    func getGroupInvites(groupId: String) async throws -> GroupInvitesResponse {
-        let url = URL(string: "\(baseURL)/groups/\(groupId)/invites")!
-        let request = createRequest(url: url)
-        return try await performRequest(request, responseType: GroupInvitesResponse.self)
-    }
-    
-    func revokeGroupInvite(inviteId: String, groupId: String) async throws -> SuccessResponse {
-        let url = URL(string: "\(baseURL)/groups/\(groupId)/invites/\(inviteId)")!
-        let request = createRequest(url: url, method: "DELETE")
-        return try await performRequest(request, responseType: SuccessResponse.self)
-    }
+    // Note: This server doesn't support listing/revoking individual invites
+    // It uses invite tokens instead through InviteMembersView
     
     func removeGroupMember(userId: String, groupId: String) async throws -> SuccessResponse {
         let url = URL(string: "\(baseURL)/groups/\(groupId)/members/\(userId)")!
         let request = createRequest(url: url, method: "DELETE")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func addGroupMember(email: String, groupId: String) async throws -> GroupMemberResponse {
+        let url = URL(string: "\(baseURL)/groups/\(groupId)/members")!
+        let body = try JSONEncoder().encode(["email": email])
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: GroupMemberResponse.self)
+    }
+    
+    func addGroupAdmin(userId: String, groupId: String) async throws -> GroupAdminResponse {
+        let url = URL(string: "\(baseURL)/groups/\(groupId)/admins")!
+        let body = try JSONEncoder().encode(["userId": userId])
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: GroupAdminResponse.self)
+    }
+    
+    func removeGroupAdmin(userId: String, groupId: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/groups/\(groupId)/admins/\(userId)")!
+        let request = createRequest(url: url, method: "DELETE")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func searchUserByEmail(email: String) async throws -> UserSearchResponse {
+        let url = URL(string: "\(baseURL)/users/search?email=\(email.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")")!
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: UserSearchResponse.self)
+    }
+    
+    // Add convenience method for leaving a group (removing current user)
+    func leaveGroup(groupId: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/groups/\(groupId)/leave")!
+        let request = createRequest(url: url, method: "POST")
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
     
@@ -538,15 +624,19 @@ class APIService: ObservableObject {
     // MARK: - Password Reset Endpoints
     
     func forgotPassword(email: String) async throws -> SuccessResponse {
-        let url = URL(string: "\(baseURL)/auth/forgot-password")!
+        let url = URL(string: "\(baseURL)/password-reset/request")!
         let body = try JSONEncoder().encode(ForgotPasswordRequest(email: email))
         let request = createRequest(url: url, method: "POST", body: body)
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
     
     func resetPassword(token: String, password: String) async throws -> SuccessResponse {
-        let url = URL(string: "\(baseURL)/auth/reset-password/\(token)")!
-        let body = try JSONEncoder().encode(ResetPasswordRequest(password: password))
+        let url = URL(string: "\(baseURL)/password-reset/reset")!
+        let body = try JSONEncoder().encode(ResetPasswordRequest(
+            token: token,
+            newPassword: password,
+            confirmPassword: password
+        ))
         let request = createRequest(url: url, method: "POST", body: body)
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
@@ -554,11 +644,14 @@ class APIService: ObservableObject {
     // MARK: - Group Events Endpoints
     
     func createGroupEvent(groupId: String, title: String, description: String?, location: String?, date: String, time: String, maxAttendees: Int?, guests: Int = 0, notifyGroup: Bool = false) async throws -> EventResponse {
+        // Use the groups/:id/events endpoint as per actual server implementation
         let url = URL(string: "\(baseURL)/groups/\(groupId)/events")!
+        
         let body = try JSONEncoder().encode(GroupEventRequest(
             title: title,
             description: description,
             location: location,
+            locationUrl: nil,
             date: date,
             time: time,
             maxAttendees: maxAttendees,
@@ -581,6 +674,22 @@ class APIService: ObservableObject {
         let url = URL(string: "\(baseURL)/events/\(eventId)/attendees")!
         let request = createRequest(url: url)
         return try await performRequest(request, responseType: EventAttendeesResponse.self)
+    }
+    
+    func sendEventEmail(eventId: String, subject: String, message: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/events/\(eventId)/send-email")!
+        let requestBody = SendEventEmailRequest(subject: subject, message: message)
+        let body = try JSONEncoder().encode(requestBody)
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func sendGroupMessage(groupId: String, subject: String, message: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/groups/\(groupId)/send-message")!
+        let requestBody = SendGroupMessageRequest(subject: subject, message: message)
+        let body = try JSONEncoder().encode(requestBody)
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: SuccessResponse.self)
     }
 }
 
@@ -638,4 +747,46 @@ struct EventAttendeesData: Codable {
     let attendees: [User]
     let totalCount: Int
     let eventTitle: String
+}
+
+struct SendEventEmailRequest: Codable {
+    let subject: String
+    let message: String
+}
+
+struct SendGroupMessageRequest: Codable {
+    let subject: String
+    let message: String
+}
+
+struct UserSearchResponse: Codable {
+    let success: Bool
+    let message: String?
+    let data: UserSearchData
+}
+
+struct UserSearchData: Codable {
+    let user: User
+}
+
+struct GroupMemberResponse: Codable {
+    let success: Bool
+    let message: String?
+    let data: GroupMemberData
+}
+
+struct GroupMemberData: Codable {
+    let group: Group
+    let newMember: User
+}
+
+struct GroupAdminResponse: Codable {
+    let success: Bool
+    let message: String?
+    let data: GroupAdminData
+}
+
+struct GroupAdminData: Codable {
+    let groupAdmins: [User]
+    let totalAdmins: Int
 }

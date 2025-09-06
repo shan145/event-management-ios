@@ -6,31 +6,63 @@ struct ForgotPasswordView: View {
     @State private var showingSuccessAlert = false
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Header Bar
+            HStack {
+                Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(.appPrimary)
+                
+                Spacer()
+                
+                Text("Forgot Password")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                // Invisible button for spacing
+                Button("Cancel") {
+                    // Empty action
+                }
+                .opacity(0)
+                .disabled(true)
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.vertical, AppSpacing.md)
+            .background(Color.appSurface)
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(Color.appDivider),
+                alignment: .bottom
+            )
+            
             ScrollView {
-                VStack(spacing: 32) {
+                VStack(spacing: AppSpacing.xl) {
                     // Header
-                    VStack(spacing: 16) {
+                    VStack(spacing: AppSpacing.lg) {
                         Image(systemName: "lock.rotation")
                             .font(.system(size: 64))
                             .foregroundColor(.appPrimary)
                         
-                        VStack(spacing: 8) {
+                        VStack(spacing: AppSpacing.sm) {
                             Text("Forgot Password?")
-                                .font(.title)
+                                .font(AppTypography.h3)
                                 .fontWeight(.bold)
+                                .foregroundColor(.appTextPrimary)
                             
                             Text("Enter your email address and we'll send you a link to reset your password.")
-                                .font(.body)
-                                .foregroundColor(.secondary)
+                                .font(AppTypography.body2)
+                                .foregroundColor(.appTextSecondary)
                                 .multilineTextAlignment(.center)
-                                .padding(.horizontal)
                         }
                     }
-                    .padding(.top, 40)
+                    .padding(.top, AppSpacing.xl)
                     
                     // Form
-                    VStack(spacing: 24) {
+                    VStack(spacing: AppSpacing.lg) {
                         AppTextField(
                             title: "Email Address",
                             placeholder: "Enter your email address",
@@ -52,40 +84,26 @@ struct ForgotPasswordView: View {
                             isDisabled: !viewModel.isValid
                         )
                     }
-                    .padding(.horizontal)
                     
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                             .foregroundColor(.red)
-                            .font(.caption)
-                            .padding(.horizontal)
+                            .font(AppTypography.caption)
                     }
                     
                     Spacer(minLength: 100)
                 }
-                .padding()
+                .padding(.horizontal, AppSpacing.xl)
+                .padding(.bottom, AppSpacing.xl)
             }
-            .navigationTitle("Forgot Password")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Forgot Password")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
-                
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
+        }
+        .background(Color.appBackground)
+        .alert("Reset Link Sent", isPresented: $showingSuccessAlert) {
+            Button("OK") {
+                presentationMode.wrappedValue.dismiss()
             }
-            .alert("Reset Link Sent", isPresented: $showingSuccessAlert) {
-                Button("OK") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-            } message: {
-                Text("If an account with that email exists, we've sent a password reset link.")
-            }
+        } message: {
+            Text("If an account with that email exists, we've sent a password reset link.")
         }
     }
 }

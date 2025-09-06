@@ -2,9 +2,37 @@ import SwiftUI
 
 struct EventAttendeeManagementView: View {
     let event: Event
+    let onEventUpdated: (() -> Void)?
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var authManager: AuthManager
     @StateObject private var viewModel = EventAttendeeManagementViewModel()
     @State private var selectedTab = 0
+    @State private var showingSuccessAlert = false
+    @State private var successMessage = ""
+    @State private var isPerformingAction = false
+    
+    init(event: Event, onEventUpdated: (() -> Void)? = nil) {
+        self.event = event
+        self.onEventUpdated = onEventUpdated
+    }
+    
+    private var canManageEvent: Bool {
+        guard let currentUser = authManager.currentUser else { return false }
+        
+        // Get the group ID from the event
+        let groupId: String
+        switch event.groupId {
+        case .group(let group):
+            groupId = group.id
+        case .populatedGroup(let popGroup):
+            groupId = popGroup.id
+        case .id(let id):
+            groupId = id
+        }
+        
+        // Check if user is super admin or admin of this specific group
+        return currentUser.isAdminOfGroup(groupId)
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -92,9 +120,7 @@ struct EventAttendeeManagementView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
-            Task {
-                await viewModel.loadEventAttendees(eventId: event.id)
-            }
+            viewModel.loadEventAttendees(event: event)
         }
     }
     
@@ -107,13 +133,20 @@ struct EventAttendeeManagementView: View {
                     attendee: attendee,
                     status: "Going",
                     statusColor: .green,
-                    actions: [
+                    actions: canManageEvent ? [
                         AttendeeAction(
                             title: "Move to Waitlist",
                             color: .orange,
                             action: {
                                 Task {
-                                    await viewModel.moveToWaitlist(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = true
+                                    let success = await viewModel.moveToWaitlist(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = false
+                                    if success {
+                                        successMessage = "User moved to waitlist successfully"
+                                        showingSuccessAlert = true
+                                        onEventUpdated?()
+                                    }
                                 }
                             }
                         ),
@@ -122,17 +155,24 @@ struct EventAttendeeManagementView: View {
                             color: .red,
                             action: {
                                 Task {
-                                    await viewModel.rejectAttendee(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = true
+                                    let success = await viewModel.rejectAttendee(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = false
+                                    if success {
+                                        successMessage = "User marked as not going"
+                                        showingSuccessAlert = true
+                                        onEventUpdated?()
+                                    }
                                 }
                             }
                         )
-                    ]
+                    ] : []
                 )
             }
         }
         .listStyle(PlainListStyle())
         .refreshable {
-            await viewModel.loadEventAttendees(eventId: event.id)
+            await viewModel.refreshEventData(eventId: event.id)
         }
     }
     
@@ -143,13 +183,20 @@ struct EventAttendeeManagementView: View {
                     attendee: attendee,
                     status: "Waitlist",
                     statusColor: .orange,
-                    actions: [
+                    actions: canManageEvent ? [
                         AttendeeAction(
                             title: "Approve",
                             color: .green,
                             action: {
                                 Task {
-                                    await viewModel.approveAttendee(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = true
+                                    let success = await viewModel.approveAttendee(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = false
+                                    if success {
+                                        successMessage = "User approved successfully"
+                                        showingSuccessAlert = true
+                                        onEventUpdated?()
+                                    }
                                 }
                             }
                         ),
@@ -158,17 +205,24 @@ struct EventAttendeeManagementView: View {
                             color: .red,
                             action: {
                                 Task {
-                                    await viewModel.rejectAttendee(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = true
+                                    let success = await viewModel.rejectAttendee(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = false
+                                    if success {
+                                        successMessage = "User marked as not going"
+                                        showingSuccessAlert = true
+                                        onEventUpdated?()
+                                    }
                                 }
                             }
                         )
-                    ]
+                    ] : []
                 )
             }
         }
         .listStyle(PlainListStyle())
         .refreshable {
-            await viewModel.loadEventAttendees(eventId: event.id)
+            await viewModel.refreshEventData(eventId: event.id)
         }
     }
     
@@ -179,23 +233,56 @@ struct EventAttendeeManagementView: View {
                     attendee: attendee,
                     status: "Not Going",
                     statusColor: .red,
-                    actions: [
+                    actions: canManageEvent ? [
                         AttendeeAction(
                             title: "Move to Waitlist",
                             color: .orange,
                             action: {
                                 Task {
-                                    await viewModel.moveToWaitlist(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = true
+                                    let success = await viewModel.moveToWaitlist(eventId: event.id, userId: attendee.id)
+                                    isPerformingAction = false
+                                    if success {
+                                        successMessage = "User moved to waitlist successfully"
+                                        showingSuccessAlert = true
+                                        onEventUpdated?()
+                                    }
                                 }
                             }
                         )
-                    ]
+                    ] : []
                 )
             }
         }
         .listStyle(PlainListStyle())
         .refreshable {
-            await viewModel.loadEventAttendees(eventId: event.id)
+            await viewModel.refreshEventData(eventId: event.id)
+        }
+        .alert("Success", isPresented: $showingSuccessAlert) {
+            Button("OK") { }
+        } message: {
+            Text(successMessage)
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+            }
+        }
+        .overlay(
+            isPerformingAction ? 
+            ProgressView("Processing...")
+                .padding()
+                .background(Color.black.opacity(0.7))
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            : nil
+        )
+        .onAppear {
+            viewModel.loadEventAttendees(event: event)
         }
     }
 }
@@ -215,9 +302,7 @@ struct AttendeeRowView: View {
                     .font(.headline)
                     .fontWeight(.medium)
                 
-                Text(attendee.email)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Email removed for privacy
                 
                 Text(status)
                     .font(.caption)
@@ -265,14 +350,24 @@ class EventAttendeeManagementViewModel: ObservableObject {
     private let apiService = APIService.shared
     
     @MainActor
-    func loadEventAttendees(eventId: String) async {
+    func loadEventAttendees(event: Event) {
+        // Use the data already available in the Event object
+        goingAttendees = event.goingList ?? []
+        waitlistAttendees = event.waitlist ?? []
+        notGoingAttendees = event.noGoList ?? []
+        
+        isLoading = false
+    }
+    
+    @MainActor
+    func refreshEventData(eventId: String) async {
         isLoading = true
         
         do {
-            let response = try await apiService.getEventAttendees(eventId: eventId)
-            // Note: This endpoint only returns confirmed attendees
-            // For full management, we'd need separate endpoints for waitlist and not-going
-            goingAttendees = response.data.attendees
+            let response = try await apiService.getEvent(id: eventId)
+            goingAttendees = response.data.event.goingList ?? []
+            waitlistAttendees = response.data.event.waitlist ?? []
+            notGoingAttendees = response.data.event.noGoList ?? []
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -281,32 +376,38 @@ class EventAttendeeManagementViewModel: ObservableObject {
     }
     
     @MainActor
-    func approveAttendee(eventId: String, userId: String) async {
+    func approveAttendee(eventId: String, userId: String) async -> Bool {
         do {
             _ = try await apiService.approveEventAttendee(eventId: eventId, userId: userId)
-            await loadEventAttendees(eventId: eventId)
+            await refreshEventData(eventId: eventId)
+            return true
         } catch {
             errorMessage = error.localizedDescription
+            return false
         }
     }
     
     @MainActor
-    func rejectAttendee(eventId: String, userId: String) async {
+    func rejectAttendee(eventId: String, userId: String) async -> Bool {
         do {
             _ = try await apiService.rejectEventAttendee(eventId: eventId, userId: userId)
-            await loadEventAttendees(eventId: eventId)
+            await refreshEventData(eventId: eventId)
+            return true
         } catch {
             errorMessage = error.localizedDescription
+            return false
         }
     }
     
     @MainActor
-    func moveToWaitlist(eventId: String, userId: String) async {
+    func moveToWaitlist(eventId: String, userId: String) async -> Bool {
         do {
             _ = try await apiService.moveToWaitlist(eventId: eventId, userId: userId)
-            await loadEventAttendees(eventId: eventId)
+            await refreshEventData(eventId: eventId)
+            return true
         } catch {
             errorMessage = error.localizedDescription
+            return false
         }
     }
 }

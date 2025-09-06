@@ -21,12 +21,8 @@ class GroupDetailViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            // Note: The API might not have a leave group endpoint
-            // We'll need to implement this based on your server's API
-            print("🔄 Leaving group - API endpoint needed")
-            
-            // For now, just refresh the group details
-            await fetchGroupDetails(groupId: groupId)
+            let response = try await apiService.leaveGroup(groupId: groupId)
+            print("✅ Successfully left group: \(response.message ?? "Success")")
             
         } catch {
             errorMessage = error.localizedDescription

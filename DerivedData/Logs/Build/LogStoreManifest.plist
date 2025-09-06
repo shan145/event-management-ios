@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>11</integer>
+	<key>logs</key>
+	<dict>
+		<key>740C57D3-2027-4747-9771-619394356952</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>740C57D3-2027-4747-9771-619394356952.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>event-management-ios project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>event-management-ios</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Cleaning project event-management-ios with scheme event-management-ios</string>
+			<key>timeStartedRecording</key>
+			<real>778812153.62467802</real>
+			<key>timeStoppedRecording</key>
+			<real>778812153.98207498</real>
+			<key>title</key>
+			<string>Cleaning project event-management-ios with scheme event-management-ios</string>
+			<key>uniqueIdentifier</key>
+			<string>740C57D3-2027-4747-9771-619394356952</string>
+		</dict>
+		<key>E3534E42-7EDD-433F-B4CF-6F89DD656060</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>E3534E42-7EDD-433F-B4CF-6F89DD656060.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>20</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>event-management-ios project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>event-management-ios</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project event-management-ios with scheme event-management-ios</string>
+			<key>timeStartedRecording</key>
+			<real>778812153.98958695</real>
+			<key>timeStoppedRecording</key>
+			<real>778812169.38603604</real>
+			<key>title</key>
+			<string>Building project event-management-ios with scheme event-management-ios</string>
+			<key>uniqueIdentifier</key>
+			<string>E3534E42-7EDD-433F-B4CF-6F89DD656060</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

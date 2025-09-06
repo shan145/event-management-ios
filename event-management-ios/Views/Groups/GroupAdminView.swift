@@ -4,7 +4,6 @@ struct GroupAdminView: View {
     let group: Group
     @StateObject private var viewModel = GroupAdminViewModel()
     @Environment(\.presentationMode) var presentationMode
-    @State private var selectedTab = 0
     @State private var showingInviteSheet = false
     @State private var showingDeleteAlert = false
     
@@ -37,45 +36,8 @@ struct GroupAdminView: View {
                 headerSection
             }
             
-            // Tab picker
-            HStack {
-                Button("Members") {
-                    selectedTab = 0
-                }
-                .foregroundColor(selectedTab == 0 ? .white : .blue)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(selectedTab == 0 ? Color.blue : Color.clear)
-                .cornerRadius(8)
-                
-                Button("Invites") {
-                    selectedTab = 1
-                }
-                .foregroundColor(selectedTab == 1 ? .white : .blue)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(selectedTab == 1 ? Color.blue : Color.clear)
-                .cornerRadius(8)
-                
-                Button("Settings") {
-                    selectedTab = 2
-                }
-                .foregroundColor(selectedTab == 2 ? .white : .blue)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(selectedTab == 2 ? Color.blue : Color.clear)
-                .cornerRadius(8)
-            }
-            .padding()
-            
-            // Tab content
-            if selectedTab == 0 {
-                GroupMembersView(group: group, viewModel: viewModel)
-            } else if selectedTab == 1 {
-                GroupInvitesView(group: group, viewModel: viewModel)
-            } else if selectedTab == 2 {
-                GroupSettingsView(group: group, viewModel: viewModel)
-            }
+            // Members view (no tabs needed)
+            GroupMembersView(group: group, viewModel: viewModel)
         }
         .sheet(isPresented: $showingInviteSheet) {
             InviteMembersView(group: group)
@@ -95,6 +57,20 @@ struct GroupAdminView: View {
             Task {
                 await viewModel.loadGroupData(groupId: group.id)
             }
+        }
+        .alert("Success", isPresented: $viewModel.showSuccess) {
+            Button("OK") {
+                viewModel.showSuccess = false
+            }
+        } message: {
+            Text("Operation completed successfully")
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
     }
     
@@ -117,7 +93,7 @@ struct GroupAdminView: View {
                     .font(.title2)
                     .fontWeight(.semibold)
                 
-                Text("\(viewModel.members.count) members • \(viewModel.pendingInvites.count) pending invites")
+                Text("\(viewModel.members.count) members")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -133,19 +109,45 @@ struct GroupMembersView: View {
     let group: Group
     @ObservedObject var viewModel: GroupAdminViewModel
     @State private var showingRemoveAlert = false
+    @State private var showingMakeAdminAlert = false
+    @State private var showingRemoveAdminAlert = false
+    @State private var showingAddMemberSheet = false
     @State private var selectedMember: User?
+    @State private var memberAction: MemberAction = .remove
+    
+    enum MemberAction {
+        case remove, makeAdmin, removeAdmin
+    }
     
     var body: some View {
         List {
+            // Add Member Section
+            Section(header: Text("Add Member")) {
+                Button("Add Member by Email") {
+                    showingAddMemberSheet = true
+                }
+                .foregroundColor(.blue)
+            }
+            
             Section(header: Text("Admins")) {
                 ForEach(viewModel.admins, id: \.id) { admin in
                     MemberRowView(
                         member: admin,
                         isAdmin: true,
-                        canRemove: admin.id != AuthManager.shared.currentUser?.id
-                    ) {
+                        canRemove: admin.id != AuthManager.shared.currentUser?.id,
+                        canMakeAdmin: false,
+                        canRemoveAdmin: admin.id != AuthManager.shared.currentUser?.id && admin.id != group.adminId?.id
+                    ) { action in
                         selectedMember = admin
-                        showingRemoveAlert = true
+                        memberAction = action
+                        switch action {
+                        case .remove:
+                            showingRemoveAlert = true
+                        case .removeAdmin:
+                            showingRemoveAdminAlert = true
+                        default:
+                            break
+                        }
                     }
                 }
             }
@@ -155,15 +157,28 @@ struct GroupMembersView: View {
                     MemberRowView(
                         member: member,
                         isAdmin: false,
-                        canRemove: true
-                    ) {
+                        canRemove: true,
+                        canMakeAdmin: true,
+                        canRemoveAdmin: false
+                    ) { action in
                         selectedMember = member
-                        showingRemoveAlert = true
+                        memberAction = action
+                        switch action {
+                        case .remove:
+                            showingRemoveAlert = true
+                        case .makeAdmin:
+                            showingMakeAdminAlert = true
+                        default:
+                            break
+                        }
                     }
                 }
             }
         }
         .listStyle(PlainListStyle())
+        .sheet(isPresented: $showingAddMemberSheet) {
+            AddMemberByEmailView(group: group, viewModel: viewModel)
+        }
         .alert("Remove Member", isPresented: $showingRemoveAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Remove", role: .destructive) {
@@ -175,6 +190,30 @@ struct GroupMembersView: View {
             }
         } message: {
             Text("Are you sure you want to remove this member from the group?")
+        }
+        .alert("Make Admin", isPresented: $showingMakeAdminAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Make Admin") {
+                if let member = selectedMember {
+                    Task {
+                        await viewModel.makeUserAdmin(userId: member.id, groupId: group.id)
+                    }
+                }
+            }
+        } message: {
+            Text("Are you sure you want to make this user a group admin?")
+        }
+        .alert("Remove Admin", isPresented: $showingRemoveAdminAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove Admin", role: .destructive) {
+                if let member = selectedMember {
+                    Task {
+                        await viewModel.removeUserAdmin(userId: member.id, groupId: group.id)
+                    }
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove admin privileges from this user?")
         }
     }
 }
@@ -271,21 +310,21 @@ struct GroupSettingsView: View {
             
             Section(header: Text("Group Settings")) {
                 Toggle("Allow Member Invites", isOn: $viewModel.allowMemberInvites)
-                    .onChange(of: viewModel.allowMemberInvites) { newValue in
+                    .onChange(of: viewModel.allowMemberInvites) {
                         Task {
                             await viewModel.updateGroupSettings(groupId: group.id)
                         }
                     }
                 
                 Toggle("Require Admin Approval", isOn: $viewModel.requireAdminApproval)
-                    .onChange(of: viewModel.requireAdminApproval) { newValue in
+                    .onChange(of: viewModel.requireAdminApproval) {
                         Task {
                             await viewModel.updateGroupSettings(groupId: group.id)
                         }
                     }
                 
                 Toggle("Public Group", isOn: $viewModel.isPublicGroup)
-                    .onChange(of: viewModel.isPublicGroup) { newValue in
+                    .onChange(of: viewModel.isPublicGroup) {
                         Task {
                             await viewModel.updateGroupSettings(groupId: group.id)
                         }
@@ -319,7 +358,9 @@ struct MemberRowView: View {
     let member: User
     let isAdmin: Bool
     let canRemove: Bool
-    let onRemove: () -> Void
+    let canMakeAdmin: Bool
+    let canRemoveAdmin: Bool
+    let onAction: (GroupMembersView.MemberAction) -> Void
     
     var body: some View {
         HStack {
@@ -340,9 +381,10 @@ struct MemberRowView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                 
-                Text(member.email)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Hide email for privacy as requested
+                // Text(member.email)
+                //     .font(.caption)
+                //     .foregroundColor(.secondary)
             }
             
             Spacer()
@@ -358,11 +400,30 @@ struct MemberRowView: View {
                     .cornerRadius(8)
             }
             
-            // Remove button
-            if canRemove {
-                Button(action: onRemove) {
-                    Image(systemName: "person.fill.xmark")
+            // Action buttons
+            if canMakeAdmin || canRemove || canRemoveAdmin {
+                Menu {
+                    if canMakeAdmin {
+                        Button("Make Admin") {
+                            onAction(.makeAdmin)
+                        }
+                    }
+                    
+                    if canRemoveAdmin {
+                        Button("Remove Admin") {
+                            onAction(.removeAdmin)
+                        }
+                    }
+                    
+                    if canRemove {
+                        Button("Remove from Group") {
+                            onAction(.remove)
+                        }
                         .foregroundColor(.red)
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .foregroundColor(.secondary)
                 }
             }
         }
@@ -406,6 +467,110 @@ struct InviteRowView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Add Member by Email View
+
+struct AddMemberByEmailView: View {
+    let group: Group
+    @ObservedObject var viewModel: GroupAdminViewModel
+    @Environment(\.presentationMode) var presentationMode
+    @State private var email = ""
+    @State private var isLoading = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Text("Add Member")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                Button("Add") {
+                    Task {
+                        await addMember()
+                    }
+                }
+                .foregroundColor(.blue)
+                .disabled(email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading)
+            }
+            .padding()
+            
+            Divider()
+            
+            // Content
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Add member to \"\(group.name)\"")
+                        .font(.headline)
+                    
+                    Text("Enter the email address of the user you want to add to this group.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Email Address")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    TextField("user@example.com", text: $email)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                        .disabled(isLoading)
+                }
+                
+                if isLoading {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Adding member...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .font(.subheadline)
+                        .foregroundColor(.red)
+                        .padding(.top, 8)
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+        .background(Color.white)
+        .onAppear {
+            // Clear any previous errors when the view appears
+            viewModel.errorMessage = nil
+        }
+    }
+    
+    private func addMember() async {
+        isLoading = true
+        // Clear any previous error
+        viewModel.errorMessage = nil
+        
+        await viewModel.addMemberByEmail(email: email, groupId: group.id)
+        
+        if viewModel.errorMessage == nil {
+            // Success - dismiss the sheet
+            presentationMode.wrappedValue.dismiss()
+        }
+        isLoading = false
     }
 }
 

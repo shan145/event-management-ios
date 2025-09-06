@@ -1,0 +1,184 @@
+{
+  "source": "/Users/samuelhan/Desktop/src/us-eventify/event-management-ios/event-management-ios/Views/Groups/GroupDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Delete Group",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 190
+        }
+      },
+      {
+        "comment": "",
+        "key": "Leave Group",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 201
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld members",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "Group Statistics",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "Members",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 93
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manage",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "Invite",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 135
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 139
+        }
+      },
+      {
+        "comment": "",
+        "key": "Leave Group",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 168
+        }
+      },
+      {
+        "comment": "",
+        "key": "Create Event",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Create Event",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 161
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 191
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 192
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to delete this group? This action cannot be undone.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 199
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 202
+        }
+      },
+      {
+        "comment": "",
+        "key": "Leave",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 203
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to leave \"%@\"? You will need to be re-invited to rejoin.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 211
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 238
+        }
+      },
+      {
+        "comment": "",
+        "key": "Admin",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 243
+        }
+      },
+      {
+        "comment": "",
+        "key": "Make Admin",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 260
+        }
+      },
+      {
+        "comment": "",
+        "key": "Remove from Group",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 264
+        }
+      }
+    ]
+  },
+  "version": 1
+}

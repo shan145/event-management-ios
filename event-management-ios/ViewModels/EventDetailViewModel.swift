@@ -21,7 +21,7 @@ class EventDetailViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let response = try await apiService.joinEvent(id: eventId)
+            let response = try await apiService.joinEventWaitlist(id: eventId)
             print("✅ Successfully joined event: \(response.message)")
             
             // Refresh event details
