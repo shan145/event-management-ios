@@ -34,7 +34,7 @@ struct GroupsView: View {
                         message: "Join a group to start managing events"
                     )
                 } else {
-                    LazyVStack(spacing: AppSpacing.md) {
+                    LazyVStack(spacing: AppSpacing.lg) {
                         ForEach(viewModel.myGroups) { group in
                             DashboardGroupCardView(group: group) {
                                 Task { await viewModel.loadDashboardData() }
@@ -55,22 +55,25 @@ struct GroupsView: View {
     }
     
     private func emptyStateView(icon: String, title: String, message: String) -> some View {
-        VStack(spacing: AppSpacing.md) {
+        VStack(spacing: AppSpacing.lg) {
             Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundColor(Color.appTextSecondary)
+                .font(.system(size: 56, weight: .light))
+                .foregroundColor(Color.grey400)
             
-            Text(title)
-                .font(AppTypography.h5)
-                .foregroundColor(Color.appTextPrimary)
-            
-            Text(message)
-                .font(AppTypography.body2)
-                .foregroundColor(Color.appTextSecondary)
-                .multilineTextAlignment(.center)
+            VStack(spacing: AppSpacing.sm) {
+                Text(title)
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundColor(Color.appTextPrimary)
+                
+                Text(message)
+                    .font(.system(size: 16, weight: .regular, design: .rounded))
+                    .foregroundColor(Color.grey600)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(nil)
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(AppSpacing.xl)
+        .padding(AppSpacing.xxl)
     }
 }
 

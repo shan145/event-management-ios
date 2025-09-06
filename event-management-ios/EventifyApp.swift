@@ -1,6 +1,6 @@
 //
-//  event_management_iosApp.swift
-//  event-management-ios
+//  EventifyApp.swift
+//  Eventify
 //
 //  Created by Samuel Han on 8/30/25.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct event_management_iosApp: App {
+struct EventifyApp: App {
     @StateObject private var authManager = AuthManager.shared
     
     var body: some Scene {

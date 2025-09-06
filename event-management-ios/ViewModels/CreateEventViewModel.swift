@@ -9,6 +9,8 @@ class CreateEventViewModel: ObservableObject {
     @Published var selectedTime = Date()
     @Published var isUnlimitedCapacity = true
     @Published var maxAttendees = ""
+    @Published var guests = ""
+    @Published var notifyGroupMembers = false
     @Published var selectedGroupId = ""
     @Published var availableGroups: [Group] = []
     @Published var preSelectedGroup: Group? = nil
@@ -42,6 +44,81 @@ class CreateEventViewModel: ObservableObject {
         self.selectedGroupId = group.id
     }
     
+    func duplicateEvent(from event: Event) {
+        // Pre-fill all fields from the existing event
+        self.title = event.title
+        self.description = event.description ?? ""
+        self.location = event.location?.name ?? ""
+        
+        // Parse the event date and time
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        
+        // Parse date
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        if let eventDate = dateFormatter.date(from: event.date) {
+            self.selectedDate = eventDate
+        }
+        
+        // Parse time
+        dateFormatter.dateFormat = "HH:mm"
+        if let eventTime = dateFormatter.date(from: event.time) {
+            // Combine date and time for the time picker
+            let calendar = Calendar.current
+            let dateComponents = calendar.dateComponents([.year, .month, .day], from: selectedDate)
+            let timeComponents = calendar.dateComponents([.hour, .minute], from: eventTime)
+            
+            var combinedComponents = DateComponents()
+            combinedComponents.year = dateComponents.year
+            combinedComponents.month = dateComponents.month
+            combinedComponents.day = dateComponents.day
+            combinedComponents.hour = timeComponents.hour
+            combinedComponents.minute = timeComponents.minute
+            combinedComponents.timeZone = TimeZone(identifier: "America/New_York")
+            
+            if let combinedDate = calendar.date(from: combinedComponents) {
+                self.selectedTime = combinedDate
+            }
+        }
+        
+        // Set capacity settings
+        if let maxCapacity = event.maxAttendees, maxCapacity > 0 {
+            self.isUnlimitedCapacity = false
+            self.maxAttendees = String(maxCapacity)
+        } else {
+            self.isUnlimitedCapacity = true
+            self.maxAttendees = ""
+        }
+        
+        // Set guests
+        self.guests = String(event.guests)
+        
+        // Don't auto-enable notifications for duplicated events
+        self.notifyGroupMembers = false
+        
+        // Set the group
+        switch event.groupId {
+        case .group(let group):
+            setPreSelectedGroup(group)
+        case .populatedGroup(let popGroup):
+            // Create a minimal Group from PopulatedGroup
+            let group = Group(
+                id: popGroup.id,
+                name: popGroup.name,
+                adminId: nil,
+                groupAdmins: nil,
+                members: nil, // PopulatedGroup.members is [String]?, but Group.members is [User]?
+                tags: nil,
+                inviteToken: nil,
+                createdAt: nil,
+                eventCount: nil
+            )
+            setPreSelectedGroup(group)
+        case .id(let groupId):
+            self.selectedGroupId = groupId
+        }
+    }
+    
     func createEvent() async {
         guard isFormValid else { return }
         
@@ -65,6 +142,9 @@ class CreateEventViewModel: ObservableObject {
                 maxAttendeesInt = Int(maxAttendees)
             }
             
+            // Parse guests
+            let guestsInt = Int(guests.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+            
             let _ = try await apiService.createEvent(
                 groupId: selectedGroupId,
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -72,7 +152,9 @@ class CreateEventViewModel: ObservableObject {
                 location: location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : location.trimmingCharacters(in: .whitespacesAndNewlines),
                 date: dateString,
                 time: timeString,
-                maxAttendees: maxAttendeesInt
+                maxAttendees: maxAttendeesInt,
+                guests: guestsInt,
+                notifyGroup: notifyGroupMembers
             )
             
             // Success

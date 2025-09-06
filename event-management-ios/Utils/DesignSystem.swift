@@ -78,9 +78,15 @@ struct AppCornerRadius {
 // MARK: - Shadows
 
 struct AppShadows {
-    static let small = Shadow(color: .black.opacity(0.1), radius: 1, x: 0, y: 1)
-    static let medium = Shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 4)
-    static let large = Shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 8)
+    static let none = Shadow(color: .clear, radius: 0, x: 0, y: 0)
+    static let small = Shadow(color: .black.opacity(0.08), radius: 2, x: 0, y: 1)
+    static let medium = Shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
+    static let large = Shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: 8)
+    static let xl = Shadow(color: .black.opacity(0.18), radius: 24, x: 0, y: 12)
+    
+    // Interactive shadows for buttons
+    static let button = Shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+    static let buttonPressed = Shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
 }
 
 struct Shadow {
@@ -103,12 +109,13 @@ struct PrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(AppTypography.button)
             .foregroundColor(.white)
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.vertical, AppSpacing.sm)
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.vertical, AppSpacing.md)
             .background(Color.appPrimary)
-            .cornerRadius(AppCornerRadius.medium)
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .cornerRadius(AppCornerRadius.large)
+            .appShadow(configuration.isPressed ? AppShadows.buttonPressed : AppShadows.button)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
@@ -117,15 +124,17 @@ struct SecondaryButtonStyle: ButtonStyle {
         configuration.label
             .font(AppTypography.button)
             .foregroundColor(Color.appPrimary)
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.vertical, AppSpacing.sm)
-            .background(Color.clear)
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.vertical, AppSpacing.md)
+            .background(Color.appSurface)
+            .cornerRadius(AppCornerRadius.large)
             .overlay(
-                RoundedRectangle(cornerRadius: AppCornerRadius.medium)
-                    .stroke(Color.appDivider, lineWidth: 1)
+                RoundedRectangle(cornerRadius: AppCornerRadius.large)
+                    .stroke(Color.grey300, lineWidth: 1.5)
             )
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .appShadow(configuration.isPressed ? AppShadows.buttonPressed : AppShadows.button)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
@@ -134,29 +143,114 @@ struct TextButtonStyle: ButtonStyle {
         configuration.label
             .font(AppTypography.button)
             .foregroundColor(Color.appPrimary)
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, AppSpacing.sm)
+            .background(configuration.isPressed ? Color.grey100 : Color.clear)
+            .cornerRadius(AppCornerRadius.medium)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Modern Interactive Button Styles
+
+struct ModernActionButtonStyle: ButtonStyle {
+    let color: Color
+    let isDestructive: Bool
+    
+    init(color: Color = .appPrimary, isDestructive: Bool = false) {
+        self.color = color
+        self.isDestructive = isDestructive
+    }
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 14, weight: .medium, design: .rounded))
+            .foregroundColor(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(color)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(configuration.isPressed ? Color.black.opacity(0.1) : Color.clear)
+                    )
+            )
+            .appShadow(configuration.isPressed ? AppShadows.buttonPressed : AppShadows.button)
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+struct ModernCardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 15, weight: .medium, design: .rounded))
+            .foregroundColor(Color.appTextPrimary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.grey50)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.grey200, lineWidth: 1)
+                    )
+            )
+            .appShadow(configuration.isPressed ? AppShadows.small : AppShadows.none)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
 
 // MARK: - Card Style
 
 struct CardStyle: ViewModifier {
+    let elevation: Shadow
+    
+    init(elevation: Shadow = AppShadows.medium) {
+        self.elevation = elevation
+    }
+    
     func body(content: Content) -> some View {
         content
             .background(Color.appSurface)
-            .cornerRadius(AppCornerRadius.large)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppCornerRadius.large)
-                    .stroke(Color.appDivider, lineWidth: 1)
+            .cornerRadius(AppCornerRadius.xl)
+            .appShadow(elevation)
+    }
+}
+
+struct ModernCardStyle: ViewModifier {
+    let isPressed: Bool
+    
+    init(isPressed: Bool = false) {
+        self.isPressed = isPressed
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.appSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.grey100, lineWidth: 1)
+                    )
             )
-            .appShadow(AppShadows.small)
+            .appShadow(isPressed ? AppShadows.large : AppShadows.medium)
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
     }
 }
 
 extension View {
-    func cardStyle() -> some View {
-        self.modifier(CardStyle())
+    func cardStyle(elevation: Shadow = AppShadows.medium) -> some View {
+        self.modifier(CardStyle(elevation: elevation))
+    }
+    
+    func modernCardStyle(isPressed: Bool = false) -> some View {
+        self.modifier(ModernCardStyle(isPressed: isPressed))
     }
 }
 
@@ -180,20 +274,56 @@ struct AppTextFieldStyle: TextFieldStyle {
 struct StatusTag: View {
     let text: String
     let color: Color
+    let style: TagStyle
     
-    init(_ text: String, color: Color) {
+    enum TagStyle {
+        case filled
+        case outlined
+        case soft
+    }
+    
+    init(_ text: String, color: Color, style: TagStyle = .filled) {
         self.text = text
         self.color = color
+        self.style = style
     }
     
     var body: some View {
         Text(text)
-            .font(AppTypography.caption)
-            .foregroundColor(.white)
-            .padding(.horizontal, AppSpacing.sm)
-            .padding(.vertical, AppSpacing.xs)
-            .background(color)
-            .cornerRadius(AppCornerRadius.large)
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .foregroundColor(foregroundColor)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(backgroundColor)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(borderColor, lineWidth: style == .outlined ? 1.5 : 0)
+            )
+    }
+    
+    private var foregroundColor: Color {
+        switch style {
+        case .filled:
+            return .white
+        case .outlined, .soft:
+            return color
+        }
+    }
+    
+    private var backgroundColor: Color {
+        switch style {
+        case .filled:
+            return color
+        case .outlined:
+            return .clear
+        case .soft:
+            return color.opacity(0.15)
+        }
+    }
+    
+    private var borderColor: Color {
+        style == .outlined ? color : .clear
     }
 }
 

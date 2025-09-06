@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct CreateEventView: View {
     @Environment(\.dismiss) private var dismiss
@@ -7,9 +8,27 @@ struct CreateEventView: View {
     @State private var showTimePicker = false
     
     let preSelectedGroup: Group?
+    let eventToDuplicate: Event?
+    let onEventCreated: (() -> Void)?
     
-    init(preSelectedGroup: Group? = nil) {
+    init(preSelectedGroup: Group? = nil, eventToDuplicate: Event? = nil, onEventCreated: (() -> Void)? = nil) {
         self.preSelectedGroup = preSelectedGroup
+        self.eventToDuplicate = eventToDuplicate
+        self.onEventCreated = onEventCreated
+    }
+    
+    private func searchLocationInMaps(location: String) {
+        let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let mapsURL = URL(string: "maps://?q=\(encodedLocation)")
+        let webURL = URL(string: "https://maps.google.com/maps?q=\(encodedLocation)")
+        
+        if let mapsURL = mapsURL, UIApplication.shared.canOpenURL(mapsURL) {
+            // Open in Apple Maps if available
+            UIApplication.shared.open(mapsURL)
+        } else if let webURL = webURL {
+            // Fallback to Google Maps in browser
+            UIApplication.shared.open(webURL)
+        }
     }
     
     var body: some View {
@@ -42,6 +61,9 @@ struct CreateEventView: View {
                     // Description Section
                     descriptionSection
                     
+                    // Notification Section
+                    notificationSection
+                    
                     // Spacer for bottom padding
                     Spacer(minLength: 100)
                 }
@@ -53,7 +75,12 @@ struct CreateEventView: View {
         .background(Color.appBackground)
         .ignoresSafeArea(.container, edges: .bottom)
         .task {
-            if let preSelectedGroup = preSelectedGroup {
+            if let eventToDuplicate = eventToDuplicate {
+                // Pre-fill all fields from the event to duplicate
+                viewModel.duplicateEvent(from: eventToDuplicate)
+                // Load available groups for admin users
+                await viewModel.loadAvailableGroups()
+            } else if let preSelectedGroup = preSelectedGroup {
                 viewModel.setPreSelectedGroup(preSelectedGroup)
             } else {
                 await viewModel.loadAvailableGroups()
@@ -92,7 +119,7 @@ struct CreateEventView: View {
                 
                 Spacer()
                 
-                Text("Create Event")
+                Text(eventToDuplicate != nil ? "Duplicate Event" : "Create Event")
                     .font(AppTypography.h3)
                     .foregroundColor(Color.appTextPrimary)
                 
@@ -102,6 +129,7 @@ struct CreateEventView: View {
                     Task {
                         await viewModel.createEvent()
                         if viewModel.isSuccess {
+                            onEventCreated?() // Trigger refresh callback
                             dismiss()
                         }
                     }
@@ -269,15 +297,37 @@ struct CreateEventView: View {
     
     private var locationSection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            Text("Location")
-                .font(AppTypography.h4)
-                .foregroundColor(Color.appTextPrimary)
+            HStack {
+                Text("Location")
+                    .font(AppTypography.h4)
+                    .foregroundColor(Color.appTextPrimary)
+                
+                Spacer()
+                
+                if !viewModel.location.isEmpty {
+                    Button(action: {
+                        searchLocationInMaps(location: viewModel.location)
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "map")
+                                .font(.system(size: 14))
+                            Text("Search")
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .foregroundColor(Color.statusAdmin)
+                    }
+                }
+            }
             
             AppTextField(
                 title: "Location",
-                placeholder: "Enter event location (optional)",
+                placeholder: "e.g., Central Park, New York or 123 Main St, City",
                 text: $viewModel.location
             )
+            
+            Text("💡 Tip: Include city/state for better accuracy")
+                .font(.system(size: 12, weight: .regular))
+                .foregroundColor(Color.grey500)
         }
         .padding(AppSpacing.xl)
         .background(Color.appSurface)
@@ -287,7 +337,7 @@ struct CreateEventView: View {
     
     private var capacitySection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            Text("Capacity")
+            Text("Capacity & Guests")
                 .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
@@ -304,6 +354,12 @@ struct CreateEventView: View {
                     text: $viewModel.maxAttendees
                 )
             }
+            
+            AppTextField(
+                title: "Additional Guests",
+                placeholder: "Number of non-member guests (optional)",
+                text: $viewModel.guests
+            )
         }
         .padding(AppSpacing.xl)
         .background(Color.appSurface)
@@ -322,6 +378,33 @@ struct CreateEventView: View {
                 placeholder: "Enter event description (optional)",
                 text: $viewModel.description
             )
+        }
+        .padding(AppSpacing.xl)
+        .background(Color.appSurface)
+        .cornerRadius(AppCornerRadius.large)
+        .appShadow(AppShadows.small)
+    }
+    
+    private var notificationSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            Text("Notifications")
+                .font(AppTypography.h4)
+                .foregroundColor(Color.appTextPrimary)
+            
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                HStack {
+                    Toggle("Notify Members via Email?", isOn: $viewModel.notifyGroupMembers)
+                        .font(AppTypography.body2)
+                        .foregroundColor(Color.appTextPrimary)
+                }
+                
+                if viewModel.notifyGroupMembers {
+                    Text("All group members will receive an email notification about this new event.")
+                        .font(AppTypography.caption)
+                        .foregroundColor(Color.appTextSecondary)
+                        .padding(.leading, AppSpacing.sm)
+                }
+            }
         }
         .padding(AppSpacing.xl)
         .background(Color.appSurface)

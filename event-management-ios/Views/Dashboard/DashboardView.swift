@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DashboardView: View {
     @EnvironmentObject var authManager: AuthManager
@@ -230,140 +231,161 @@ struct DashboardGroupCardView: View {
     @State private var showingInviteMembers = false
     @State private var showingManageMembers = false
     @State private var showingGroupDetail = false
+    @State private var showingGroupEvents = false
     @State private var showingLeaveAlert = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             // Header with title and admin tag
             HStack {
-                Text(group.name)
-                    .font(AppTypography.h4)
-                    .foregroundColor(Color.appTextPrimary)
-                    .fontWeight(.bold)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(group.name)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundColor(Color.appTextPrimary)
+                        .lineLimit(2)
+                    
+                    if let tags = group.tags, !tags.isEmpty {
+                        Text(tags.prefix(2).joined(separator: " • "))
+                            .font(.system(size: 15, weight: .regular, design: .rounded))
+                            .foregroundColor(Color.grey600)
+                            .lineLimit(1)
+                    }
+                }
                 
                 Spacer()
                 
                 if isGroupAdmin {
-                    StatusTag("Group Admin", color: Color.statusAdmin)
+                    StatusTag("Admin", color: Color.statusAdmin, style: .soft)
                 }
             }
             
-            // Group details
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "person.3")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.appTextSecondary)
-                    Text("\(group.memberCount) members")
-                        .font(AppTypography.body1)
-                        .foregroundColor(Color.appTextSecondary)
+            // Group details with modern styling
+            HStack(spacing: AppSpacing.lg) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(group.memberCount)")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color.appTextPrimary)
+                    Text("members")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundColor(Color.grey500)
+                        .textCase(.uppercase)
+                        .tracking(0.5)
                 }
                 
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.appTextSecondary)
-                    Text("\(group.totalEventCount) events")
-                        .font(AppTypography.body1)
-                        .foregroundColor(Color.appTextSecondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(group.totalEventCount)")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color.appTextPrimary)
+                    Text("events")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundColor(Color.grey500)
+                        .textCase(.uppercase)
+                        .tracking(0.5)
                 }
+                
+                Spacer()
             }
             
-            // Group tag if exists
-            if let tags = group.tags, !tags.isEmpty {
-                HStack {
-                    ForEach(tags.prefix(2), id: \.self) { tag in
-                        Text(tag)
-                            .font(AppTypography.body2)
-                            .foregroundColor(Color.appTextPrimary)
-                            .padding(.horizontal, AppSpacing.sm)
-                            .padding(.vertical, AppSpacing.xs)
-                            .background(Color.grey100)
-                            .cornerRadius(AppCornerRadius.large)
-                    }
-                    Spacer()
-                }
-            }
-            
-            // Actions
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
+            // Actions with uniform width
+            VStack(spacing: AppSpacing.sm) {
                 // View Members (always shown)
                 Button(action: {
                     showingGroupDetail = true
                 }) {
-                    HStack(spacing: AppSpacing.xs) {
+                    HStack(spacing: AppSpacing.sm) {
                         Image(systemName: "eye")
                             .font(.system(size: 16))
                         Text("View Members")
-                            .font(AppTypography.body1)
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                        Spacer()
                     }
-                    .foregroundColor(Color.appTextPrimary)
                 }
-                .buttonStyle(PlainButtonStyle())
+                .buttonStyle(ModernCardButtonStyle())
+                .frame(maxWidth: .infinity)
+                
+                // View Events (always shown for all users)
+                Button(action: {
+                    showingGroupEvents = true
+                }) {
+                    HStack(spacing: AppSpacing.sm) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 16))
+                        Text("View Events")
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                        Spacer()
+                    }
+                }
+                .buttonStyle(ModernCardButtonStyle())
+                .frame(maxWidth: .infinity)
                 
                 if isGroupAdmin {
-                    // Admin actions for group admins
+                    // Admin actions for group admins - all in consistent black/white style
                     Button(action: {
                         showingCreateEvent = true
                     }) {
-                        HStack(spacing: AppSpacing.xs) {
+                        HStack(spacing: AppSpacing.sm) {
                             Image(systemName: "plus")
                                 .font(.system(size: 16))
                             Text("Add Event")
-                                .font(AppTypography.body1)
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                            Spacer()
                         }
-                        .foregroundColor(Color.appTextPrimary)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(ModernCardButtonStyle())
+                    .frame(maxWidth: .infinity)
                     
                     Button(action: {
                         showingInviteMembers = true
                     }) {
-                        HStack(spacing: AppSpacing.xs) {
+                        HStack(spacing: AppSpacing.sm) {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 16))
-                            Text("Invite")
-                                .font(AppTypography.body1)
+                            Text("Invite Members")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                            Spacer()
                         }
-                        .foregroundColor(Color.appTextPrimary)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(ModernCardButtonStyle())
+                    .frame(maxWidth: .infinity)
                     
                     Button(action: {
                         showingManageMembers = true
                     }) {
-                        HStack(spacing: AppSpacing.xs) {
-                            Image(systemName: "person.2")
+                        HStack(spacing: AppSpacing.sm) {
+                            Image(systemName: "person.2.badge.gearshape")
                                 .font(.system(size: 16))
                             Text("Manage Members")
-                                .font(AppTypography.body1)
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                            Spacer()
                         }
-                        .foregroundColor(Color.appPrimary)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(ModernCardButtonStyle())
+                    .frame(maxWidth: .infinity)
                 } else {
-                    // Leave group for non-admins
+                    // Leave group for non-admins - keep red for destructive action
                     Button(action: {
                         showingLeaveAlert = true
                     }) {
-                        HStack(spacing: AppSpacing.xs) {
-                            Image(systemName: "arrow.right")
+                        HStack(spacing: AppSpacing.sm) {
+                            Image(systemName: "arrow.right.square")
                                 .font(.system(size: 16))
                             Text("Leave Group")
-                                .font(AppTypography.body1)
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                            Spacer()
                         }
-                        .foregroundColor(.red)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(ModernActionButtonStyle(color: Color.statusNotGoing, isDestructive: true))
+                    .frame(maxWidth: .infinity)
                 }
             }
         }
-        .padding(AppSpacing.lg)
-        .background(Color.appSurface)
-        .cornerRadius(AppCornerRadius.large)
-        .appShadow(AppShadows.small)
+        .padding(AppSpacing.xl)
+        .modernCardStyle()
         .sheet(isPresented: $showingCreateEvent) {
-            CreateEventView(preSelectedGroup: group)
+            CreateEventView(preSelectedGroup: group) {
+                // Refresh the parent view when event is successfully created
+                onGroupUpdated?()
+            }
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
@@ -382,6 +404,11 @@ struct DashboardGroupCardView: View {
                 onGroupUpdated?()
             }
                 .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showingGroupEvents) {
+            GroupEventsListView(group: group)
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
         .alert("Leave Group", isPresented: $showingLeaveAlert) {
@@ -428,22 +455,35 @@ struct DashboardEventCardView: View {
     @State private var showingEditEvent = false
     @State private var showingAttendees = false
     @State private var showingDeleteAlert = false
+    @State private var showingNotGoingAlert = false
+    @State private var showingDuplicateEvent = false
+    @State private var showingEmailAttendees = false
     @State private var isJoiningWaitlist = false
+    @State private var isMarkingNotGoing = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             // Header with title and status
             HStack {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                VStack(alignment: .leading, spacing: 4) {
+                    // Group indicator
+                    if let groupName = event.groupId.name {
+                        Text(groupName)
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color.statusAdmin)
+                            .textCase(.uppercase)
+                            .tracking(0.5)
+                    }
+                    
                     Text(event.title)
-                        .font(AppTypography.h4)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
                         .foregroundColor(Color.appTextPrimary)
-                        .fontWeight(.bold)
+                        .lineLimit(2)
                     
                     if let description = event.description, !description.isEmpty {
                         Text(description)
-                            .font(AppTypography.body1)
-                            .foregroundColor(Color.appTextSecondary)
+                            .font(.system(size: 15, weight: .regular, design: .rounded))
+                            .foregroundColor(Color.grey600)
                             .lineLimit(2)
                     }
                 }
@@ -452,119 +492,210 @@ struct DashboardEventCardView: View {
                 
                 // Status tag based on user's RSVP
                 if let status = getUserEventStatus() {
-                    StatusTag(status, color: getStatusColor(status))
+                    StatusTag(status, color: getStatusColor(status), style: .soft)
                 }
             }
             
-            // Event details
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.appTextSecondary)
+            // Event details with modern layout
+            VStack(spacing: AppSpacing.md) {
+                // Date and Time
+                HStack(spacing: AppSpacing.sm) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color.statusAdmin)
+                        .frame(width: 24)
+                    
                     Text(event.formattedDateTime)
-                        .font(AppTypography.body1)
-                        .foregroundColor(Color.appTextSecondary)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color.appTextPrimary)
+                    
+                    Spacer()
                 }
                 
+                // Location if exists
                 if let location = event.location, !location.name.isEmpty {
-                    HStack(spacing: AppSpacing.xs) {
-                        Image(systemName: "mappin")
-                            .font(.system(size: 16))
-                            .foregroundColor(Color.appTextSecondary)
-                        Text(location.name)
-                            .font(AppTypography.body1)
-                            .foregroundColor(Color.appTextSecondary)
+                    Button(action: {
+                        openLocationInMaps(location: location.name)
+                    }) {
+                        HStack(spacing: AppSpacing.sm) {
+                            Image(systemName: "mappin.circle")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color.statusNotGoing)
+                                .frame(width: 24)
+                            
+                            Text(location.name)
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundColor(Color.appTextPrimary)
+                            
+                            Spacer()
+                            
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color.grey400)
+                        }
                     }
+                    .buttonStyle(PlainButtonStyle())
                 }
                 
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "person.3")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.appTextSecondary)
-                    Text("\(getTotalAttendees()) total (\(getGoingCount()) going)")
-                        .font(AppTypography.body1)
-                        .foregroundColor(Color.appTextSecondary)
-                }
-                
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "clock.badge")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.appTextSecondary)
-                    Text("\(getWaitlistCount()) waitlisted")
-                        .font(AppTypography.body1)
-                        .foregroundColor(Color.appTextSecondary)
+                // Attendance stats
+                HStack(spacing: AppSpacing.lg) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(getGoingCount())")
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color.statusGoing)
+                        Text("attending")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(Color.grey500)
+                            .textCase(.uppercase)
+                            .tracking(0.5)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(getWaitlistCount())")
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color.statusWaitlisted)
+                        Text("waitlisted")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(Color.grey500)
+                            .textCase(.uppercase)
+                            .tracking(0.5)
+                    }
+                    
+                    if getTotalAttendees() > 0 {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(getTotalAttendees())")
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                .foregroundColor(Color.appTextPrimary)
+                            Text("total")
+                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                .foregroundColor(Color.grey500)
+                                .textCase(.uppercase)
+                                .tracking(0.5)
+                        }
+                    }
+                    
+                    Spacer()
                 }
             }
             
             Spacer(minLength: AppSpacing.lg)
             
-            // Actions
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Button(action: {
-                    Task {
-                        await joinWaitlist()
-                    }
-                }) {
-                    HStack(spacing: AppSpacing.xs) {
-                        if isJoiningWaitlist {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        } else {
-                            Image(systemName: "person.badge.plus")
-                                .font(.system(size: 16))
+            // Actions with uniform width
+            VStack(spacing: AppSpacing.sm) {
+                // Show appropriate button based on user's current status
+                if shouldShowJoinWaitlistButton() {
+                    Button(action: {
+                        Task {
+                            await joinWaitlist()
                         }
-                        Text(isJoiningWaitlist ? "Joining..." : "Join Waitlist")
-                            .font(AppTypography.body1)
+                    }) {
+                        HStack(spacing: AppSpacing.sm) {
+                            if isJoiningWaitlist {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "person.badge.plus")
+                                    .font(.system(size: 16))
+                            }
+                            Text(isJoiningWaitlist ? "Joining..." : "Join Waitlist")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                            Spacer()
+                        }
                     }
-                    .foregroundColor(Color.appTextPrimary)
+                    .buttonStyle(ModernActionButtonStyle(color: Color.statusWaitlisted))
+                    .disabled(isJoiningWaitlist)
+                    .frame(maxWidth: .infinity)
+                } else {
+                    Button(action: {
+                        showingNotGoingAlert = true
+                    }) {
+                        HStack(spacing: AppSpacing.sm) {
+                            if isMarkingNotGoing {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "xmark.circle")
+                                    .font(.system(size: 16))
+                            }
+                            Text(isMarkingNotGoing ? "Updating..." : "Not Going")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(ModernActionButtonStyle(color: Color.statusNotGoing))
+                    .disabled(isMarkingNotGoing)
+                    .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(PlainButtonStyle())
-                .disabled(isJoiningWaitlist)
                 
                 Button(action: {
                     showingAttendees = true
                 }) {
-                    HStack(spacing: AppSpacing.xs) {
+                    HStack(spacing: AppSpacing.sm) {
                         Image(systemName: "eye")
                             .font(.system(size: 16))
                         Text("View Attendees")
-                            .font(AppTypography.body1)
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                        Spacer()
                     }
-                    .foregroundColor(Color.appTextPrimary)
                 }
-                .buttonStyle(PlainButtonStyle())
+                .buttonStyle(ModernCardButtonStyle())
+                .frame(maxWidth: .infinity)
             }
             
             // Admin actions for event creators/admins
             if canEditEvent() {
-                HStack(spacing: AppSpacing.sm) {
+                HStack(spacing: AppSpacing.md) {
                     Spacer()
+                    
+                    Button(action: {
+                        showingDuplicateEvent = true
+                    }) {
+                        Image(systemName: "doc.on.doc")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(Color.appPrimary)
+                            .frame(width: 40, height: 40)
+                            .background(Color.appPrimary.opacity(0.1))
+                            .clipShape(Circle())
+                    }
+                    
+                    Button(action: {
+                        showingEmailAttendees = true
+                    }) {
+                        Image(systemName: "envelope")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(Color.statusAdmin)
+                            .frame(width: 40, height: 40)
+                            .background(Color.statusAdmin.opacity(0.1))
+                            .clipShape(Circle())
+                    }
                     
                     Button(action: {
                         showingEditEvent = true
                     }) {
                         Image(systemName: "pencil")
-                            .font(.system(size: 16))
+                            .font(.system(size: 16, weight: .medium))
                             .foregroundColor(Color.appTextPrimary)
+                            .frame(width: 40, height: 40)
+                            .background(Color.grey100)
+                            .clipShape(Circle())
                     }
-                    .buttonStyle(PlainButtonStyle())
                     
                     Button(action: {
                         showingDeleteAlert = true
                     }) {
                         Image(systemName: "trash")
-                            .font(.system(size: 16))
-                            .foregroundColor(.red)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(Color.statusNotGoing)
+                            .frame(width: 40, height: 40)
+                            .background(Color.statusNotGoing.opacity(0.1))
+                            .clipShape(Circle())
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
+                .padding(.top, AppSpacing.sm)
             }
         }
-        .padding(AppSpacing.lg)
-        .background(Color.appSurface)
-        .cornerRadius(AppCornerRadius.large)
-        .appShadow(AppShadows.small)
+        .padding(AppSpacing.xl)
+        .modernCardStyle()
         .sheet(isPresented: $showingEditEvent) {
             EditEventView(event: event) {
                 onEventUpdated?()
@@ -579,6 +710,19 @@ struct DashboardEventCardView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showingDuplicateEvent) {
+            CreateEventView(eventToDuplicate: event) {
+                // Refresh the parent view when event is successfully created
+                onEventUpdated?()
+            }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showingEmailAttendees) {
+            EventEmailView(event: event)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
         .alert("Delete Event", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {
                 deleteEvent()
@@ -586,6 +730,16 @@ struct DashboardEventCardView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Are you sure you want to delete this event? This action cannot be undone.")
+        }
+        .alert("Mark as Not Going", isPresented: $showingNotGoingAlert) {
+            Button("Not Going", role: .destructive) {
+                Task {
+                    await markNotGoing()
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to mark yourself as not going to this event?")
         }
     }
     
@@ -601,6 +755,26 @@ struct DashboardEventCardView: View {
         }
         
         return nil
+    }
+    
+    private func shouldShowJoinWaitlistButton() -> Bool {
+        // Show "Join Waitlist" if user has not responded or is marked as "Not Going"
+        let userStatus = getUserEventStatus()
+        return userStatus == nil || userStatus == "Not Going"
+    }
+    
+    private func openLocationInMaps(location: String) {
+        let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let mapsURL = URL(string: "maps://?q=\(encodedLocation)")
+        let webURL = URL(string: "https://maps.google.com/maps?q=\(encodedLocation)")
+        
+        if let mapsURL = mapsURL, UIApplication.shared.canOpenURL(mapsURL) {
+            // Open in Apple Maps if available
+            UIApplication.shared.open(mapsURL)
+        } else if let webURL = webURL {
+            // Fallback to Google Maps in browser
+            UIApplication.shared.open(webURL)
+        }
     }
     
     private func getStatusColor(_ status: String) -> Color {
@@ -632,7 +806,20 @@ struct DashboardEventCardView: View {
     
     private func canEditEvent() -> Bool {
         guard let currentUser = authManager.currentUser else { return false }
-        return currentUser.isAdmin || currentUser.isGroupAdmin
+        
+        // Get the group ID from the event
+        let groupId: String
+        switch event.groupId {
+        case .group(let group):
+            groupId = group.id
+        case .populatedGroup(let popGroup):
+            groupId = popGroup.id
+        case .id(let id):
+            groupId = id
+        }
+        
+        // Check if user is super admin or admin of this specific group
+        return currentUser.isAdminOfGroup(groupId)
     }
     
     private func joinWaitlist() async {
@@ -655,6 +842,26 @@ struct DashboardEventCardView: View {
         isJoiningWaitlist = false
     }
     
+    private func markNotGoing() async {
+        isMarkingNotGoing = true
+        
+        do {
+            let response = try await APIService.shared.markEventNotGoing(id: event.id)
+            await MainActor.run {
+                print("✅ Marked as not going successfully: \(response.message ?? "Success")")
+                // Refresh the parent view
+                onEventUpdated?()
+            }
+        } catch {
+            await MainActor.run {
+                print("❌ Failed to mark as not going: \(error)")
+                // TODO: Show error alert to user
+            }
+        }
+        
+        isMarkingNotGoing = false
+    }
+    
     private func deleteEvent() {
         Task {
             do {
@@ -671,6 +878,295 @@ struct DashboardEventCardView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Group Events List View
+
+struct GroupEventsListView: View {
+    let group: Group
+    @StateObject private var viewModel = DashboardViewModel()
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: AppSpacing.md) {
+                    HStack {
+                        Button("Close") {
+                            dismiss()
+                        }
+                        .buttonStyle(TextButtonStyle())
+                        
+                        Spacer()
+                        
+                        Text("\(group.name) Events")
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color.appTextPrimary)
+                        
+                        Spacer()
+                        
+                        // Invisible button for balance
+                        Button("") { }
+                            .buttonStyle(TextButtonStyle())
+                            .disabled(true)
+                            .opacity(0)
+                    }
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.top, AppSpacing.md)
+                    
+                    Divider()
+                        .background(Color.appDivider)
+                }
+                .background(Color.appSurface)
+                
+                // Events List
+                if viewModel.isLoading {
+                    Spacer()
+                    ProgressView("Loading events...")
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundColor(Color.grey600)
+                    Spacer()
+                } else if groupEvents.isEmpty {
+                    emptyStateView()
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: AppSpacing.md) {
+                            ForEach(groupEvents) { event in
+                                EventRowView(event: event)
+                            }
+                        }
+                        .padding(.horizontal, AppSpacing.lg)
+                        .padding(.vertical, AppSpacing.lg)
+                    }
+                    .background(Color.appBackground)
+                }
+            }
+        }
+        .task {
+            await viewModel.loadDashboardData()
+        }
+    }
+    
+    private var groupEvents: [Event] {
+        return viewModel.upcomingEvents
+            .filter { $0.groupId.id == group.id }
+            .sorted { event1, event2 in
+                // Sort by date chronologically
+                let date1 = parseEventDate(event1)
+                let date2 = parseEventDate(event2)
+                return date1 < date2
+            }
+    }
+    
+    private func parseEventDate(_ event: Event) -> Date {
+        // First, try to use the existing formattedDateTime from the Event model if available
+        let eventDateTimeString = event.formattedDateTime
+        
+        // Try parsing the server's formatted datetime directly
+        let etTimeZone = TimeZone(identifier: "America/New_York")!
+        
+        // Try multiple parsing strategies
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = etTimeZone
+        
+        // Strategy 1: Parse using event.formattedDateTime if it looks like a formatted string
+        if eventDateTimeString.contains(",") && eventDateTimeString.contains("ET") {
+            dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
+            let cleanedString = eventDateTimeString.replacingOccurrences(of: " ET", with: "")
+            if let parsedDate = dateFormatter.date(from: cleanedString) {
+                return parsedDate
+            }
+        }
+        
+        // Strategy 2: Combine date and time strings directly (assuming they're in UTC or ET)
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let combinedString = "\(event.date) \(event.time)"
+        if let parsedDate = dateFormatter.date(from: combinedString) {
+            return parsedDate
+        }
+        
+        // Strategy 3: Parse separately and combine
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = etTimeZone
+        
+        if let parsedDate = dateFormatter.date(from: event.date) {
+            dateFormatter.dateFormat = "HH:mm"
+            if let parsedTime = dateFormatter.date(from: event.time) {
+                let calendar = Calendar.current
+                let dateComponents = calendar.dateComponents([.year, .month, .day], from: parsedDate)
+                let timeComponents = calendar.dateComponents([.hour, .minute], from: parsedTime)
+                
+                var combinedComponents = DateComponents()
+                combinedComponents.year = dateComponents.year
+                combinedComponents.month = dateComponents.month
+                combinedComponents.day = dateComponents.day
+                combinedComponents.hour = timeComponents.hour
+                combinedComponents.minute = timeComponents.minute
+                combinedComponents.timeZone = etTimeZone
+                
+                if let combinedDate = calendar.date(from: combinedComponents) {
+                    return combinedDate
+                }
+            }
+            return parsedDate
+        }
+        
+        // Last resort
+        print("⚠️ Failed to parse event date: '\(event.date)' and time: '\(event.time)', formattedDateTime: '\(eventDateTimeString)'")
+        return Date()
+    }
+    
+    private func emptyStateView() -> some View {
+        VStack(spacing: AppSpacing.lg) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.system(size: 56, weight: .light))
+                .foregroundColor(Color.grey400)
+            
+            VStack(spacing: AppSpacing.sm) {
+                Text("No Events")
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundColor(Color.appTextPrimary)
+                
+                Text("This group doesn't have any upcoming events yet.")
+                    .font(.system(size: 16, weight: .regular, design: .rounded))
+                    .foregroundColor(Color.grey600)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(nil)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(AppSpacing.xxl)
+        .background(Color.appBackground)
+    }
+}
+
+// MARK: - Event Row View
+
+struct EventRowView: View {
+    let event: Event
+    
+    var body: some View {
+        HStack(spacing: AppSpacing.md) {
+            // Date indicator
+            VStack(spacing: 2) {
+                Text(formattedMonth)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundColor(Color.statusAdmin)
+                    .textCase(.uppercase)
+                
+                Text(formattedDay)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundColor(Color.appTextPrimary)
+            }
+            .frame(width: 44)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(event.title)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(Color.appTextPrimary)
+                    .lineLimit(2)
+                
+                Text(formattedTime)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundColor(Color.grey600)
+            }
+            
+            Spacer()
+        }
+        .padding(AppSpacing.md)
+        .background(Color.appSurface)
+        .cornerRadius(AppCornerRadius.large)
+        .appShadow(AppShadows.small)
+    }
+    
+    private var formattedMonth: String {
+        let eventDate = parseEventDate()
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM"
+        dateFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        
+        return dateFormatter.string(from: eventDate)
+    }
+    
+    private var formattedDay: String {
+        let eventDate = parseEventDate()
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "d"
+        dateFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        
+        return dateFormatter.string(from: eventDate)
+    }
+    
+    private var formattedTime: String {
+        let eventDate = parseEventDate()
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "h:mm a"
+        dateFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        
+        return dateFormatter.string(from: eventDate)
+    }
+    
+    private func parseEventDate() -> Date {
+        // First, try to use the existing formattedDateTime from the Event model if available
+        let eventDateTimeString = event.formattedDateTime
+        
+        // Try parsing the server's formatted datetime directly
+        let etTimeZone = TimeZone(identifier: "America/New_York")!
+        
+        // Try multiple parsing strategies
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = etTimeZone
+        
+        // Strategy 1: Parse using event.formattedDateTime if it looks like a formatted string
+        if eventDateTimeString.contains(",") && eventDateTimeString.contains("ET") {
+            dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
+            let cleanedString = eventDateTimeString.replacingOccurrences(of: " ET", with: "")
+            if let parsedDate = dateFormatter.date(from: cleanedString) {
+                return parsedDate
+            }
+        }
+        
+        // Strategy 2: Combine date and time strings directly (assuming they're in UTC or ET)
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let combinedString = "\(event.date) \(event.time)"
+        if let parsedDate = dateFormatter.date(from: combinedString) {
+            return parsedDate
+        }
+        
+        // Strategy 3: Parse separately and combine
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = etTimeZone
+        
+        if let parsedDate = dateFormatter.date(from: event.date) {
+            dateFormatter.dateFormat = "HH:mm"
+            if let parsedTime = dateFormatter.date(from: event.time) {
+                let calendar = Calendar.current
+                let dateComponents = calendar.dateComponents([.year, .month, .day], from: parsedDate)
+                let timeComponents = calendar.dateComponents([.hour, .minute], from: parsedTime)
+                
+                var combinedComponents = DateComponents()
+                combinedComponents.year = dateComponents.year
+                combinedComponents.month = dateComponents.month
+                combinedComponents.day = dateComponents.day
+                combinedComponents.hour = timeComponents.hour
+                combinedComponents.minute = timeComponents.minute
+                combinedComponents.timeZone = etTimeZone
+                
+                if let combinedDate = calendar.date(from: combinedComponents) {
+                    return combinedDate
+                }
+            }
+            return parsedDate
+        }
+        
+        // Last resort
+        print("⚠️ Failed to parse event date: '\(event.date)' and time: '\(event.time)', formattedDateTime: '\(eventDateTimeString)'")
+        return Date()
     }
 }
 

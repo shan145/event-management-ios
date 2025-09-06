@@ -1,5 +1,17 @@
 import Foundation
 
+// MARK: - UserDefaults extension for storing filter preferences
+extension UserDefaults {
+    private enum Keys {
+        static let selectedGroupFilter = "selectedGroupFilter"
+    }
+    
+    var selectedGroupFilter: String? {
+        get { string(forKey: Keys.selectedGroupFilter) }
+        set { set(newValue, forKey: Keys.selectedGroupFilter) }
+    }
+}
+
 @MainActor
 class DashboardViewModel: ObservableObject {
     @Published var upcomingEvents: [Event] = []
@@ -7,7 +19,16 @@ class DashboardViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
+    // Filter state
+    @Published var selectedGroupFilter: String = "all" // "all" or group ID
+    @Published var filteredEvents: [Event] = []
+    
     private let apiService = APIService.shared
+    
+    init() {
+        // Load saved filter preference
+        selectedGroupFilter = UserDefaults.standard.selectedGroupFilter ?? "all"
+    }
     
     var upcomingEventsCount: Int {
         let count = upcomingEvents.count
@@ -35,6 +56,7 @@ class DashboardViewModel: ObservableObject {
             print("✅ Dashboard loaded: \(events.count) events, \(groups.count) groups")
             upcomingEvents = events
             myGroups = groups
+            updateFilteredEvents() // Apply current filter
             
         } catch {
             print("❌ Dashboard error: \(error)")
@@ -84,4 +106,64 @@ class DashboardViewModel: ObservableObject {
     func refreshData() async {
         await loadDashboardData()
     }
+    
+    // MARK: - Filtering Methods
+    
+    func setGroupFilter(_ groupId: String) {
+        selectedGroupFilter = groupId
+        UserDefaults.standard.selectedGroupFilter = groupId
+        updateFilteredEvents()
+    }
+    
+    private func updateFilteredEvents() {
+        if selectedGroupFilter == "all" {
+            filteredEvents = upcomingEvents
+        } else {
+            filteredEvents = upcomingEvents.filter { event in
+                switch event.groupId {
+                case .group(let group):
+                    return group.id == selectedGroupFilter
+                case .populatedGroup(let popGroup):
+                    return popGroup.id == selectedGroupFilter
+                case .id(let id):
+                    return id == selectedGroupFilter
+                }
+            }
+        }
+        
+        print("🔍 Filter applied: '\(selectedGroupFilter)' -> \(filteredEvents.count) events")
+    }
+    
+    var availableGroupFilters: [GroupFilter] {
+        var filters: [GroupFilter] = [
+            GroupFilter(id: "all", name: "All Groups", eventCount: upcomingEvents.count)
+        ]
+        
+        for group in myGroups {
+            let eventCount = upcomingEvents.filter { event in
+                switch event.groupId {
+                case .group(let g):
+                    return g.id == group.id
+                case .populatedGroup(let pg):
+                    return pg.id == group.id
+                case .id(let id):
+                    return id == group.id
+                }
+            }.count
+            
+            if eventCount > 0 { // Only show groups that have events
+                filters.append(GroupFilter(id: group.id, name: group.name, eventCount: eventCount))
+            }
+        }
+        
+        return filters
+    }
+}
+
+// MARK: - Supporting Models
+
+struct GroupFilter: Identifiable, Equatable {
+    let id: String
+    let name: String
+    let eventCount: Int
 }

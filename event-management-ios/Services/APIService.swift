@@ -103,6 +103,11 @@ struct ResetPasswordRequest: Codable {
     let confirmPassword: String
 }
 
+struct SendEventEmailRequest: Codable {
+    let subject: String
+    let message: String
+}
+
 
 
 struct GroupEventRequest: Codable {
@@ -429,6 +434,14 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
     
+    func sendEventEmail(eventId: String, subject: String, message: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/events/\(eventId)/send-email")!
+        let requestBody = SendEventEmailRequest(subject: subject, message: message)
+        let body = try JSONEncoder().encode(requestBody)
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
     func joinEventWaitlist(id: String) async throws -> SuccessResponse {
         let url = URL(string: "\(baseURL)/events/\(id)/join")!
         let request = createRequest(url: url, method: "POST")
@@ -676,14 +689,6 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: EventAttendeesResponse.self)
     }
     
-    func sendEventEmail(eventId: String, subject: String, message: String) async throws -> SuccessResponse {
-        let url = URL(string: "\(baseURL)/events/\(eventId)/send-email")!
-        let requestBody = SendEventEmailRequest(subject: subject, message: message)
-        let body = try JSONEncoder().encode(requestBody)
-        let request = createRequest(url: url, method: "POST", body: body)
-        return try await performRequest(request, responseType: SuccessResponse.self)
-    }
-    
     func sendGroupMessage(groupId: String, subject: String, message: String) async throws -> SuccessResponse {
         let url = URL(string: "\(baseURL)/groups/\(groupId)/send-message")!
         let requestBody = SendGroupMessageRequest(subject: subject, message: message)
@@ -747,11 +752,6 @@ struct EventAttendeesData: Codable {
     let attendees: [User]
     let totalCount: Int
     let eventTitle: String
-}
-
-struct SendEventEmailRequest: Codable {
-    let subject: String
-    let message: String
 }
 
 struct SendGroupMessageRequest: Codable {

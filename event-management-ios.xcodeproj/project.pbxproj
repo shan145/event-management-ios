@@ -113,7 +113,7 @@
 			name = "event-management-ios";
 			packageProductDependencies = (
 			);
-			productName = "event-management-ios";
+			productName = "Eventify";
 			productReference = B283A2122E63D5CC00611360 /* event-management-ios.app */;
 			productType = "com.apple.product-type.application";
 		};

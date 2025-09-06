@@ -1,0 +1,82 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="512" cy="512" r="512" fill="#007AFF"/>
+  
+  <!-- Calendar Base -->
+  <rect x="300" y="350" width="424" height="324" rx="24" fill="white"/>
+  
+  <!-- Calendar Header -->
+  <rect x="300" y="350" width="424" height="80" rx="24" fill="#F2F2F7"/>
+  <rect x="300" y="390" width="424" height="40" fill="#F2F2F7"/>
+  
+  <!-- Calendar Spiral Binding -->
+  <circle cx="400" cy="390" r="8" fill="#8E8E93"/>
+  <circle cx="450" cy="390" r="8" fill="#8E8E93"/>
+  <circle cx="500" cy="390" r="8" fill="#8E8E93"/>
+  <circle cx="550" cy="390" r="8" fill="#8E8E93"/>
+  <circle cx="600" cy="390" r="8" fill="#8E8E93"/>
+  <circle cx="650" cy="390" r="8" fill="#8E8E93"/>
+  <circle cx="700" cy="390" r="8" fill="#8E8E93"/>
+  
+  <!-- Calendar Grid -->
+  <g stroke="#E5E5EA" stroke-width="2">
+    <!-- Vertical lines -->
+    <line x1="400" y1="430" x2="400" y2="674"/>
+    <line x1="500" y1="430" x2="500" y2="674"/>
+    <line x1="600" y1="430" x2="600" y2="674"/>
+    <line x1="700" y1="430" x2="700" y2="674"/>
+    
+    <!-- Horizontal lines -->
+    <line x1="300" y1="480" x2="724" y2="480"/>
+    <line x1="300" y1="530" x2="724" y2="530"/>
+    <line x1="300" y1="580" x2="724" y2="580"/>
+    <line x1="300" y1="630" x2="724" y2="630"/>
+  </g>
+  
+  <!-- Event Dots -->
+  <circle cx="450" cy="505" r="6" fill="#FF3B30"/>
+  <circle cx="550" cy="505" r="6" fill="#34C759"/>
+  <circle cx="650" cy="555" r="6" fill="#FF9500"/>
+  <circle cx="450" cy="605" r="6" fill="#AF52DE"/>
+  <circle cx="550" cy="605" r="6" fill="#007AFF"/>
+  
+  <!-- People Icons -->
+  <g transform="translate(200, 200)">
+    <!-- Person 1 -->
+    <circle cx="0" cy="0" r="20" fill="white"/>
+    <circle cx="0" cy="-8" r="8" fill="#007AFF"/>
+    <ellipse cx="0" cy="8" rx="12" ry="16" fill="#007AFF"/>
+  </g>
+  
+  <g transform="translate(800, 200)">
+    <!-- Person 2 -->
+    <circle cx="0" cy="0" r="20" fill="white"/>
+    <circle cx="0" cy="-8" r="8" fill="#007AFF"/>
+    <ellipse cx="0" cy="8" rx="12" ry="16" fill="#007AFF"/>
+  </g>
+  
+  <g transform="translate(200, 800)">
+    <!-- Person 3 -->
+    <circle cx="0" cy="0" r="20" fill="white"/>
+    <circle cx="0" cy="-8" r="8" fill="#007AFF"/>
+    <ellipse cx="0" cy="8" rx="12" ry="16" fill="#007AFF"/>
+  </g>
+  
+  <g transform="translate(800, 800)">
+    <!-- Person 4 -->
+    <circle cx="0" cy="0" r="20" fill="white"/>
+    <circle cx="0" cy="-8" r="8" fill="#007AFF"/>
+    <ellipse cx="0" cy="8" rx="12" ry="16" fill="#007AFF"/>
+  </g>
+  
+  <!-- Connection Lines -->
+  <g stroke="white" stroke-width="4" opacity="0.6">
+    <line x1="220" y1="200" x2="400" y2="350"/>
+    <line x1="780" y1="200" x2="624" y2="350"/>
+    <line x1="220" y1="800" x2="400" y2="674"/>
+    <line x1="780" y1="800" x2="624" y2="674"/>
+  </g>
+  
+  <!-- App Name -->
+  <text x="512" y="950" text-anchor="middle" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif" font-size="48" font-weight="600" fill="white">Eventify</text>
+</svg>
