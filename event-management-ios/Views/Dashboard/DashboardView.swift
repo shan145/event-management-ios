@@ -475,16 +475,22 @@ struct DashboardEventCardView: View {
                             .tracking(0.5)
                     }
                     
-                    Text(event.title)
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundColor(Color.appTextPrimary)
-                        .lineLimit(2)
+                    ExpandableText(
+                        event.title,
+                        lineLimit: 2,
+                        font: .system(size: 22, weight: .bold, design: .rounded),
+                        color: Color.appTextPrimary,
+                        title: "Event Title"
+                    )
                     
                     if let description = event.description, !description.isEmpty {
-                        Text(description)
-                            .font(.system(size: 15, weight: .regular, design: .rounded))
-                            .foregroundColor(Color.grey600)
-                            .lineLimit(2)
+                        ExpandableText(
+                            description,
+                            lineLimit: 2,
+                            font: .system(size: 15, weight: .regular, design: .rounded),
+                            color: Color.grey600,
+                            title: "Event Description"
+                        )
                     }
                 }
                 
@@ -580,66 +586,85 @@ struct DashboardEventCardView: View {
             
             Spacer(minLength: AppSpacing.lg)
             
-            // Actions with uniform width
-            VStack(spacing: AppSpacing.sm) {
-                // Show appropriate button based on user's current status
-                if shouldShowJoinWaitlistButton() {
-                    Button(action: {
-                        Task {
-                            await joinWaitlist()
+            // Actions with uniform width (only show for upcoming events)
+            if !event.isPast {
+                VStack(spacing: AppSpacing.sm) {
+                    // Show appropriate button based on user's current status
+                    if shouldShowJoinWaitlistButton() {
+                        Button(action: {
+                            Task {
+                                await joinWaitlist()
+                            }
+                        }) {
+                            HStack(spacing: AppSpacing.sm) {
+                                if isJoiningWaitlist {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "person.badge.plus")
+                                        .font(.system(size: 16))
+                                }
+                                Text(isJoiningWaitlist ? "Joining..." : "Join Waitlist")
+                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                Spacer()
+                            }
                         }
+                        .buttonStyle(ModernActionButtonStyle(color: Color.statusWaitlisted))
+                        .disabled(isJoiningWaitlist)
+                        .frame(maxWidth: .infinity)
+                    } else {
+                        Button(action: {
+                            showingNotGoingAlert = true
+                        }) {
+                            HStack(spacing: AppSpacing.sm) {
+                                if isMarkingNotGoing {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "xmark.circle")
+                                        .font(.system(size: 16))
+                                }
+                                Text(isMarkingNotGoing ? "Updating..." : "Not Going")
+                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                Spacer()
+                            }
+                        }
+                        .buttonStyle(ModernActionButtonStyle(color: Color.statusNotGoing))
+                        .disabled(isMarkingNotGoing)
+                        .frame(maxWidth: .infinity)
+                    }
+                    
+                    Button(action: {
+                        showingAttendees = true
                     }) {
                         HStack(spacing: AppSpacing.sm) {
-                            if isJoiningWaitlist {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: "person.badge.plus")
-                                    .font(.system(size: 16))
-                            }
-                            Text(isJoiningWaitlist ? "Joining..." : "Join Waitlist")
+                            Image(systemName: "eye")
+                                .font(.system(size: 16))
+                            Text("View Attendees")
                                 .font(.system(size: 15, weight: .medium, design: .rounded))
                             Spacer()
                         }
                     }
-                    .buttonStyle(ModernActionButtonStyle(color: Color.statusWaitlisted))
-                    .disabled(isJoiningWaitlist)
+                    .buttonStyle(ModernCardButtonStyle())
                     .frame(maxWidth: .infinity)
-                } else {
+                }
+            } else {
+                // For past events, only show "View Attendees" button
+                VStack(spacing: AppSpacing.sm) {
                     Button(action: {
-                        showingNotGoingAlert = true
+                        showingAttendees = true
                     }) {
                         HStack(spacing: AppSpacing.sm) {
-                            if isMarkingNotGoing {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: "xmark.circle")
-                                    .font(.system(size: 16))
-                            }
-                            Text(isMarkingNotGoing ? "Updating..." : "Not Going")
+                            Image(systemName: "eye")
+                                .font(.system(size: 16))
+                            Text("View Attendees")
                                 .font(.system(size: 15, weight: .medium, design: .rounded))
                             Spacer()
                         }
                     }
-                    .buttonStyle(ModernActionButtonStyle(color: Color.statusNotGoing))
-                    .disabled(isMarkingNotGoing)
+                    .buttonStyle(ModernCardButtonStyle())
                     .frame(maxWidth: .infinity)
                 }
-                
-                Button(action: {
-                    showingAttendees = true
-                }) {
-                    HStack(spacing: AppSpacing.sm) {
-                        Image(systemName: "eye")
-                            .font(.system(size: 16))
-                        Text("View Attendees")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                        Spacer()
-                    }
-                }
-                .buttonStyle(ModernCardButtonStyle())
-                .frame(maxWidth: .infinity)
             }
             
             // Admin actions for event creators/admins
@@ -887,6 +912,7 @@ struct GroupEventsListView: View {
     let group: Group
     @StateObject private var viewModel = DashboardViewModel()
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedTimeFilter: TimeFilter = .upcoming
     
     var body: some View {
         NavigationView {
@@ -921,6 +947,16 @@ struct GroupEventsListView: View {
                 }
                 .background(Color.appSurface)
                 
+                // Time Filter
+                TimeFilterView(
+                    selectedFilter: selectedTimeFilter,
+                    onFilterSelected: { timeFilter in
+                        selectedTimeFilter = timeFilter
+                    }
+                )
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.vertical, AppSpacing.sm)
+                
                 // Events List
                 if viewModel.isLoading {
                     Spacer()
@@ -929,7 +965,13 @@ struct GroupEventsListView: View {
                         .foregroundColor(Color.grey600)
                     Spacer()
                 } else if groupEvents.isEmpty {
-                    emptyStateView()
+                    emptyStateView(
+                        icon: "calendar",
+                        title: selectedTimeFilter == .upcoming ? "No upcoming events" : "No past events",
+                        message: selectedTimeFilter == .upcoming ? 
+                                "This group doesn't have any upcoming events" : 
+                                "This group doesn't have any past events"
+                    )
                 } else {
                     ScrollView {
                         LazyVStack(spacing: AppSpacing.md) {
@@ -949,14 +991,34 @@ struct GroupEventsListView: View {
         }
     }
     
+    private func emptyStateView(icon: String, title: String, message: String) -> some View {
+        VStack(spacing: AppSpacing.md) {
+            Image(systemName: icon)
+                .font(.system(size: 48))
+                .foregroundColor(Color.appTextSecondary)
+            
+            Text(title)
+                .font(AppTypography.h5)
+                .foregroundColor(Color.appTextPrimary)
+            
+            Text(message)
+                .font(AppTypography.body2)
+                .foregroundColor(Color.appTextSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(AppSpacing.xl)
+    }
+    
     private var groupEvents: [Event] {
-        return viewModel.upcomingEvents
+        let sourceEvents = selectedTimeFilter == .upcoming ? viewModel.upcomingEvents : viewModel.pastEvents
+        return sourceEvents
             .filter { $0.groupId.id == group.id }
             .sorted { event1, event2 in
-                // Sort by date chronologically
+                // Sort by date chronologically for upcoming, reverse chronologically for past
                 let date1 = parseEventDate(event1)
                 let date2 = parseEventDate(event2)
-                return date1 < date2
+                return selectedTimeFilter == .upcoming ? date1 < date2 : date1 > date2
             }
     }
     
@@ -1053,24 +1115,44 @@ struct EventRowView: View {
             VStack(spacing: 2) {
                 Text(formattedMonth)
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color.statusAdmin)
+                    .foregroundColor(event.isPast ? Color.grey500 : Color.statusAdmin)
                     .textCase(.uppercase)
                 
                 Text(formattedDay)
                     .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.appTextPrimary)
+                    .foregroundColor(event.isPast ? Color.grey500 : Color.appTextPrimary)
             }
             .frame(width: 44)
+            .overlay(
+                // Past event indicator
+                event.isPast ? 
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("PAST")
+                            .font(.system(size: 8, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(Color.grey600)
+                            .cornerRadius(4)
+                    }
+                } : nil
+            )
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(event.title)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color.appTextPrimary)
-                    .lineLimit(2)
+                ExpandableText(
+                    event.title,
+                    lineLimit: 2,
+                    font: .system(size: 16, weight: .semibold, design: .rounded),
+                    color: event.isPast ? Color.grey500 : Color.appTextPrimary,
+                    title: "Event Title"
+                )
                 
                 Text(formattedTime)
                     .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundColor(Color.grey600)
+                    .foregroundColor(event.isPast ? Color.grey500 : Color.grey600)
             }
             
             Spacer()

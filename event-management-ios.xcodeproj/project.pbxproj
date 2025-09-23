@@ -113,7 +113,7 @@
 			name = "event-management-ios";
 			packageProductDependencies = (
 			);
-			productName = "Eventify";
+			productName = Eventable;
 			productReference = B283A2122E63D5CC00611360 /* event-management-ios.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -394,6 +394,7 @@
 				DEVELOPMENT_TEAM = 63B4SZZY54;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Eventable;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -432,6 +433,7 @@
 				DEVELOPMENT_TEAM = 63B4SZZY54;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Eventable;
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

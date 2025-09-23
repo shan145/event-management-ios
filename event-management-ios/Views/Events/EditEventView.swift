@@ -62,7 +62,14 @@ struct EditEventView: View {
             .onAppear {
                 viewModel.loadEvent(event: event)
             }
+            .onTapGesture {
+                hideKeyboard()
+            }
         }
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     // MARK: - Supporting Views

@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import SwiftUI
+import UIKit
 
 @MainActor
 class NotificationService: ObservableObject {
@@ -12,9 +13,12 @@ class NotificationService: ObservableObject {
     
     private let apiService = APIService.shared
     private var realTimeTimer: Timer?
+    private var deviceToken: String?
+    private let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
     
     private init() {
         checkAuthorizationStatus()
+        setupNotificationCategories()
         // fetchNotifications() will be called when needed, not in init
     }
     
@@ -50,6 +54,48 @@ class NotificationService: ObservableObject {
         // Register for remote notifications
         // This would typically be handled by the app delegate
         print("Registered for remote notifications")
+    }
+    
+    // MARK: - Device Token Management
+    
+    func setDeviceToken(_ token: String) {
+        self.deviceToken = token
+        Task {
+            await registerDeviceToken(token)
+        }
+    }
+    
+    private func registerDeviceToken(_ token: String) async {
+        do {
+            let request = DeviceTokenRequest(
+                token: token,
+                platform: "ios",
+                deviceId: deviceId
+            )
+            
+            _ = try await apiService.registerDeviceToken(request: request)
+            print("✅ Device token registered successfully")
+        } catch {
+            print("❌ Failed to register device token: \(error)")
+        }
+    }
+    
+    func unregisterDeviceToken() async {
+        do {
+            _ = try await apiService.unregisterDeviceToken(deviceId: deviceId)
+            print("✅ Device token unregistered successfully")
+        } catch {
+            print("❌ Failed to unregister device token: \(error)")
+        }
+    }
+    
+    func sendTestPushNotification() async {
+        do {
+            _ = try await apiService.sendTestPushNotification()
+            print("✅ Test push notification sent")
+        } catch {
+            print("❌ Failed to send test push notification: \(error)")
+        }
     }
     
     // MARK: - Local Notifications

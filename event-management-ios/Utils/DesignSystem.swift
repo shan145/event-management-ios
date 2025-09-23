@@ -259,7 +259,8 @@ extension View {
 struct AppTextFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
-            .padding(AppSpacing.md)
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, AppSpacing.sm)
             .background(Color.appSurface)
             .cornerRadius(AppCornerRadius.medium)
             .overlay(

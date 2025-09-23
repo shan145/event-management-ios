@@ -29,6 +29,9 @@ struct EventEmailView: View {
         }
         .background(Color.appBackground)
         .ignoresSafeArea(.container, edges: .bottom)
+        .onTapGesture {
+            hideKeyboard()
+        }
         .alert("Success", isPresented: $viewModel.showSuccess) {
             Button("OK") {
                 dismiss()
@@ -167,6 +170,10 @@ struct EventEmailView: View {
     
     private func getConfirmedAttendeesCount() -> Int {
         return event.goingList?.count ?? 0
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

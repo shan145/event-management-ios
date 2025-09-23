@@ -72,6 +72,9 @@ struct JoinGroupView: View {
             Spacer()
         }
         .background(Color.appBackground)
+        .onTapGesture {
+            hideKeyboard()
+        }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { }
         } message: {
@@ -79,6 +82,10 @@ struct JoinGroupView: View {
                 Text(errorMessage)
             }
         }
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

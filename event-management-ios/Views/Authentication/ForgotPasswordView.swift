@@ -98,6 +98,9 @@ struct ForgotPasswordView: View {
             }
         }
         .background(Color.appBackground)
+        .onTapGesture {
+            hideKeyboard()
+        }
         .alert("Reset Link Sent", isPresented: $showingSuccessAlert) {
             Button("OK") {
                 presentationMode.wrappedValue.dismiss()
@@ -105,6 +108,10 @@ struct ForgotPasswordView: View {
         } message: {
             Text("If an account with that email exists, we've sent a password reset link.")
         }
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

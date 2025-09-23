@@ -5,11 +5,12 @@ struct EventsView: View {
     @EnvironmentObject var viewModel: DashboardViewModel
     
     private var selectedFilterName: String {
+        let timeFilterText = viewModel.selectedTimeFilter == .upcoming ? "upcoming" : "past"
         if viewModel.selectedGroupFilter == "all" {
-            return "No upcoming events"
+            return "No \(timeFilterText) events"
         } else {
             let groupName = viewModel.availableGroupFilters.first { $0.id == viewModel.selectedGroupFilter }?.name ?? "Unknown Group"
-            return "No events in \(groupName)"
+            return "No \(timeFilterText) events in \(groupName)"
         }
     }
     
@@ -31,6 +32,14 @@ struct EventsView: View {
                 }
                 .padding(.horizontal, AppSpacing.lg)
                 .padding(.top, AppSpacing.lg)
+                
+                // Time Filters
+                TimeFilterView(
+                    selectedFilter: viewModel.selectedTimeFilter,
+                    onFilterSelected: { timeFilter in
+                        viewModel.setTimeFilter(timeFilter)
+                    }
+                )
                 
                 // Group Filters
                 if !viewModel.availableGroupFilters.isEmpty {
@@ -99,6 +108,41 @@ struct EventsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(AppSpacing.xxl)
+    }
+}
+
+// MARK: - TimeFilterView
+
+struct TimeFilterView: View {
+    let selectedFilter: TimeFilter
+    let onFilterSelected: (TimeFilter) -> Void
+    
+    var body: some View {
+        HStack(spacing: AppSpacing.sm) {
+            ForEach(TimeFilter.allCases, id: \.self) { filter in
+                Button(action: {
+                    onFilterSelected(filter)
+                }) {
+                    Text(filter.displayName)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundColor(selectedFilter == filter ? Color.white : Color.appTextSecondary)
+                        .padding(.horizontal, AppSpacing.md)
+                        .padding(.vertical, AppSpacing.sm)
+                        .background(
+                            RoundedRectangle(cornerRadius: AppCornerRadius.medium)
+                                .fill(selectedFilter == filter ? Color.appPrimary : Color.appSurface)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppCornerRadius.medium)
+                                .stroke(Color.appPrimary, lineWidth: selectedFilter == filter ? 0 : 1)
+                        )
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, AppSpacing.lg)
     }
 }
 

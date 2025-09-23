@@ -5,33 +5,35 @@ struct NotificationsView: View {
     @State private var showingNotificationSettings = false
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Custom Header
-            HStack {
-                Text("Notifications")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
-                Spacer()
-                
-                HStack(spacing: 16) {
-                    Button("Settings") {
-                        showingNotificationSettings = true
-                    }
-                    .foregroundColor(.blue)
+        ScrollView {
+            VStack(spacing: AppSpacing.lg) {
+                // Header
+                HStack {
+                    Text("Notifications")
+                        .font(AppTypography.h4)
+                        .foregroundColor(Color.appTextPrimary)
+                        .fontWeight(.bold)
                     
-                    if !notificationService.notifications.isEmpty {
-                        Button("Mark All Read") {
-                            Task {
-                                await notificationService.markAllNotificationsAsRead()
-                            }
+                    Spacer()
+                    
+                    HStack(spacing: 16) {
+                        Button("Settings") {
+                            showingNotificationSettings = true
                         }
                         .foregroundColor(.blue)
+                        
+                        if !notificationService.notifications.isEmpty {
+                            Button("Mark All Read") {
+                                Task {
+                                    await notificationService.markAllNotificationsAsRead()
+                                }
+                            }
+                            .foregroundColor(.blue)
+                        }
                     }
                 }
-            }
-            .padding(.horizontal)
-            .padding(.top)
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.lg)
             
             // Content
             if notificationService.notifications.isEmpty {
@@ -94,21 +96,22 @@ struct NotificationsView: View {
                 )
             }
         }
-            .refreshable {
+        .background(Color.appBackground)
+        .refreshable {
+            await notificationService.fetchNotifications()
+        }
+        .sheet(isPresented: $showingNotificationSettings) {
+            NotificationSettingsView()
+        }
+        .onAppear {
+            Task {
                 await notificationService.fetchNotifications()
-            }
-            .sheet(isPresented: $showingNotificationSettings) {
-                NotificationSettingsView()
-            }
-            .onAppear {
-                Task {
-                    await notificationService.fetchNotifications()
-                }
             }
         }
     }
-    
-    // MARK: - Notification Row View
+}
+
+// MARK: - Notification Row View
 
 struct NotificationRowView: View {
     let notification: AppNotification
@@ -223,7 +226,7 @@ struct NotificationSettingsView: View {
                     .frame(width: 50)
             }
             .padding(.horizontal)
-            .padding(.top)
+            .padding(.top, AppSpacing.lg)
             
             ScrollView {
                 VStack(spacing: 24) {
@@ -311,6 +314,13 @@ struct NotificationSettingsView: View {
         .onAppear {
             preferencesViewModel.loadPreferences()
         }
+        .onTapGesture {
+            hideKeyboard()
+        }
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
@@ -320,4 +330,5 @@ struct NotificationsView_Previews: PreviewProvider {
     static var previews: some View {
         NotificationsView()
     }
+}
 }

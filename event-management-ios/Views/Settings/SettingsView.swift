@@ -61,11 +61,35 @@ struct SettingsView: View {
             
             Spacer()
             
-            // Logout Button
-            Button("Logout") {
-                showingLogoutAlert = true
+            // Action Buttons
+            HStack(spacing: AppSpacing.md) {
+                // Save Changes Button (only show when on Profile tab)
+                if selectedTab == 0 {
+                    Button("Save Changes") {
+                        // Trigger the save action in ProfileSettingsView
+                        NotificationCenter.default.post(name: NSNotification.Name("SaveProfileChanges"), object: nil)
+                    }
+                    .buttonStyle(UniformButtonStyle(isDestructive: false))
+                    .frame(maxWidth: .infinity)
+                }
+                
+                // Update Password Button (only show when on Password tab)
+                if selectedTab == 1 {
+                    Button("Update Password") {
+                        // Trigger the password update action in PasswordSettingsView
+                        NotificationCenter.default.post(name: NSNotification.Name("UpdatePassword"), object: nil)
+                    }
+                    .buttonStyle(UniformButtonStyle(isDestructive: false))
+                    .frame(maxWidth: .infinity)
+                }
+                
+                // Logout Button (always visible)
+                Button("Logout") {
+                    showingLogoutAlert = true
+                }
+                .buttonStyle(UniformButtonStyle(isDestructive: true))
+                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(DestructiveButtonStyle())
             .padding(.horizontal, AppSpacing.lg)
             .padding(.bottom, AppSpacing.lg)
         }
@@ -131,20 +155,7 @@ struct ProfileSettingsView: View {
                 .cornerRadius(AppCornerRadius.large)
                 .appShadow(AppShadows.small)
                 
-                // Save Button
-                AppButton(
-                    title: "Save Changes",
-                    action: {
-                        Task {
-                            await viewModel.updateProfile()
-                            if viewModel.showSuccess {
-                                showingSuccessAlert = true
-                            }
-                        }
-                    },
-                    isLoading: viewModel.isLoading,
-                    isDisabled: !viewModel.isValid
-                )
+                // Save button is now in the main SettingsView
                 
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
@@ -158,10 +169,21 @@ struct ProfileSettingsView: View {
         .onAppear {
             viewModel.loadUserProfile()
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SaveProfileChanges"))) { _ in
+            Task {
+                await viewModel.updateProfile()
+                if viewModel.showSuccess {
+                    showingSuccessAlert = true
+                }
+            }
+        }
         .alert("Success", isPresented: $showingSuccessAlert) {
             Button("OK") { }
         } message: {
             Text("Your profile has been updated successfully.")
+        }
+        .onTapGesture {
+            hideKeyboard()
         }
     }
 }
@@ -215,21 +237,7 @@ struct PasswordSettingsView: View {
                 .cornerRadius(AppCornerRadius.large)
                 .appShadow(AppShadows.small)
                 
-                // Update Password Button
-                AppButton(
-                    title: "Update Password",
-                    action: {
-                        Task {
-                            await viewModel.updatePassword()
-                            if viewModel.showSuccess {
-                                showingSuccessAlert = true
-                                viewModel.clearForm()
-                            }
-                        }
-                    },
-                    isLoading: viewModel.isLoading,
-                    isDisabled: !viewModel.isValid
-                )
+                // Update Password button is now in the main SettingsView
                 
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
@@ -240,12 +248,49 @@ struct PasswordSettingsView: View {
             }
             .padding(AppSpacing.lg)
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("UpdatePassword"))) { _ in
+            Task {
+                await viewModel.updatePassword()
+                if viewModel.showSuccess {
+                    showingSuccessAlert = true
+                    viewModel.clearForm()
+                }
+            }
+        }
         .alert("Success", isPresented: $showingSuccessAlert) {
             Button("OK") { }
         } message: {
             Text("Your password has been updated successfully.")
         }
+        .onTapGesture {
+            hideKeyboard()
+        }
     }
+}
+
+// MARK: - Uniform Button Style for Consistent Sizing
+
+struct UniformButtonStyle: ButtonStyle {
+    let isDestructive: Bool
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(AppTypography.button)
+            .foregroundColor(.white)
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.vertical, AppSpacing.md)
+            .background(isDestructive ? Color.red : Color.appPrimary)
+            .cornerRadius(AppCornerRadius.large)
+            .appShadow(configuration.isPressed ? AppShadows.buttonPressed : AppShadows.button)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Helper Functions
+
+private func hideKeyboard() {
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
 }
 
 #Preview {

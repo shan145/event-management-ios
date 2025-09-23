@@ -31,6 +31,7 @@ struct GroupAdminView: View {
                     .foregroundColor(.blue)
                 }
                 .padding(.horizontal)
+                .padding(.top, 20)
                 
                 // Header with group info
                 headerSection

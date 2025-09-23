@@ -17,6 +17,10 @@ struct CreateEventView: View {
         self.onEventCreated = onEventCreated
     }
     
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+    
     private func searchLocationInMaps(location: String) {
         let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let mapsURL = URL(string: "maps://?q=\(encodedLocation)")
@@ -74,6 +78,9 @@ struct CreateEventView: View {
         }
         .background(Color.appBackground)
         .ignoresSafeArea(.container, edges: .bottom)
+        .onTapGesture {
+            hideKeyboard()
+        }
         .task {
             if let eventToDuplicate = eventToDuplicate {
                 // Pre-fill all fields from the event to duplicate

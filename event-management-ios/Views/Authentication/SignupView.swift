@@ -20,7 +20,7 @@ struct SignupView: View {
                     .foregroundColor(Color.appTextPrimary)
                     .fontWeight(.bold)
                 
-                Text("Get started with Eventify today")
+                Text("Get started with Eventable today")
                     .font(AppTypography.body2)
                     .foregroundColor(Color.appTextSecondary)
                     .multilineTextAlignment(.center)
@@ -79,6 +79,13 @@ struct SignupView: View {
             // Sign in link removed - handled by parent AuthenticationView
         }
         .padding(.horizontal, AppSpacing.xl)
+        .background(
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    hideKeyboard()
+                }
+        )
     }
     
     private func handleSignup() {
@@ -170,6 +177,10 @@ struct SignupView: View {
         }
         
         return nil
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

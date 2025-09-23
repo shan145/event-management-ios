@@ -350,6 +350,12 @@ struct Event: Codable, Identifiable, Equatable {
         maxAttendees == nil
     }
     
+    var isPast: Bool {
+        let now = Date()
+        let eventDate = parseEventDateTime()
+        return eventDate < now
+    }
+    
     // Computed properties for the new views
     var isOrganizer: Bool {
         // TODO: Compare with current user ID
@@ -359,6 +365,46 @@ struct Event: Codable, Identifiable, Equatable {
     var isAttending: Bool {
         // TODO: Check if current user is in attendees list
         return false
+    }
+    
+    private func parseEventDateTime() -> Date {
+        let etTimeZone = TimeZone(identifier: "America/New_York")!
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = etTimeZone
+        
+        // Try to combine date and time strings directly
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let combinedString = "\(date) \(time)"
+        if let parsedDate = dateFormatter.date(from: combinedString) {
+            return parsedDate
+        }
+        
+        // Fallback: parse separately and combine
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        if let parsedDate = dateFormatter.date(from: date) {
+            dateFormatter.dateFormat = "HH:mm"
+            if let parsedTime = dateFormatter.date(from: time) {
+                let calendar = Calendar.current
+                let dateComponents = calendar.dateComponents([.year, .month, .day], from: parsedDate)
+                let timeComponents = calendar.dateComponents([.hour, .minute], from: parsedTime)
+                
+                var combinedComponents = DateComponents()
+                combinedComponents.year = dateComponents.year
+                combinedComponents.month = dateComponents.month
+                combinedComponents.day = dateComponents.day
+                combinedComponents.hour = timeComponents.hour
+                combinedComponents.minute = timeComponents.minute
+                combinedComponents.timeZone = etTimeZone
+                
+                if let combinedDate = calendar.date(from: combinedComponents) {
+                    return combinedDate
+                }
+            }
+            return parsedDate
+        }
+        
+        // Last resort
+        return Date()
     }
     
     static let sampleEvent = Event(

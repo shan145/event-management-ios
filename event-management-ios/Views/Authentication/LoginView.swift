@@ -65,6 +65,13 @@ struct LoginView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        .background(
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    hideKeyboard()
+                }
+        )
     }
     
     private func handleLogin() {
@@ -107,6 +114,10 @@ struct LoginView: View {
         }
         
         return nil
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

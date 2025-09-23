@@ -106,9 +106,13 @@ struct EventDetailView: View {
                         .font(.headline)
                         .fontWeight(.semibold)
                     
-                    Text(description)
-                        .font(.body)
-                        .foregroundColor(.secondary)
+                    ExpandableText(
+                        description,
+                        lineLimit: 3,
+                        font: .body,
+                        color: .secondary,
+                        title: "Event Description"
+                    )
                 }
                 .padding(.horizontal)
             )

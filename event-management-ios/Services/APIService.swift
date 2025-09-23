@@ -387,6 +387,12 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: EventsResponse.self)
     }
     
+    func getPastEvents() async throws -> EventsResponse {
+        let url = URL(string: "\(baseURL)/events/past")!
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: EventsResponse.self)
+    }
+    
     func getEvent(id: String) async throws -> EventResponse {
         let url = URL(string: "\(baseURL)/events/\(id)")!
         let request = createRequest(url: url)
@@ -696,6 +702,35 @@ class APIService: ObservableObject {
         let request = createRequest(url: url, method: "POST", body: body)
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
+    
+    // MARK: - Push Notification Endpoints
+    
+    func registerDeviceToken(request: DeviceTokenRequest) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/notifications/device-token")!
+        let body = try JSONEncoder().encode(request)
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func unregisterDeviceToken(deviceId: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/notifications/device-token/\(deviceId)")!
+        let request = createRequest(url: url, method: "DELETE")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func getDeviceTokens() async throws -> DeviceTokensResponse {
+        let url = URL(string: "\(baseURL)/notifications/device-tokens")!
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: DeviceTokensResponse.self)
+    }
+    
+    func sendTestPushNotification(title: String? = nil, body: String? = nil) async throws -> TestPushNotificationResponse {
+        let url = URL(string: "\(baseURL)/notifications/test-push")!
+        let requestBody = TestPushNotificationRequest(title: title, body: body)
+        let body = try JSONEncoder().encode(requestBody)
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: TestPushNotificationResponse.self)
+    }
 }
 
 // MARK: - Response Types
@@ -759,6 +794,17 @@ struct SendGroupMessageRequest: Codable {
     let message: String
 }
 
+struct DeviceTokenRequest: Codable {
+    let token: String
+    let platform: String
+    let deviceId: String
+}
+
+struct TestPushNotificationRequest: Codable {
+    let title: String?
+    let body: String?
+}
+
 struct UserSearchResponse: Codable {
     let success: Bool
     let message: String?
@@ -789,4 +835,33 @@ struct GroupAdminResponse: Codable {
 struct GroupAdminData: Codable {
     let groupAdmins: [User]
     let totalAdmins: Int
+}
+
+struct DeviceTokensResponse: Codable {
+    let success: Bool
+    let message: String?
+    let data: DeviceTokensData
+}
+
+struct DeviceTokensData: Codable {
+    let deviceTokens: [DeviceToken]
+}
+
+struct DeviceToken: Codable {
+    let deviceId: String
+    let platform: String
+    let isActive: Bool
+    let lastUsed: String
+    let createdAt: String
+}
+
+struct TestPushNotificationResponse: Codable {
+    let success: Bool
+    let message: String?
+    let data: TestPushNotificationData?
+}
+
+struct TestPushNotificationData: Codable {
+    let successCount: Int
+    let failureCount: Int
 }

@@ -76,7 +76,8 @@ struct AppTextArea: View {
             
             TextEditor(text: $text)
                 .frame(minHeight: 100)
-                .padding(AppSpacing.md)
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.vertical, AppSpacing.sm)
                 .background(Color.appSurface)
                 .cornerRadius(AppCornerRadius.medium)
                 .overlay(

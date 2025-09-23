@@ -43,6 +43,7 @@ struct GroupDetailView: View {
                     // Description removed - Group model no longer has description field
                 }
                 .padding(.horizontal)
+                .padding(.top, 20)
                 
                 Divider()
                 

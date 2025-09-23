@@ -95,7 +95,14 @@ struct ResetPasswordView: View {
             } message: {
                 Text("Your password has been reset successfully. You can now log in with your new password.")
             }
+            .onTapGesture {
+                hideKeyboard()
+            }
         }
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

@@ -48,6 +48,9 @@ struct CreateGroupView: View {
         }
         .background(Color.appBackground)
         .ignoresSafeArea(.container, edges: .bottom)
+        .onTapGesture {
+            hideKeyboard()
+        }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { }
         } message: {
@@ -126,6 +129,10 @@ struct CreateGroupView: View {
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
