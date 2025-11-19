@@ -5,97 +5,113 @@ struct NotificationsView: View {
     @State private var showingNotificationSettings = false
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: AppSpacing.lg) {
-                // Header
-                HStack {
-                    Text("Notifications")
-                        .font(AppTypography.h4)
-                        .foregroundColor(Color.appTextPrimary)
-                        .fontWeight(.bold)
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 16) {
-                        Button("Settings") {
-                            showingNotificationSettings = true
-                        }
-                        .foregroundColor(.blue)
+        NavigationView {
+            List {
+                // Header Section
+                Section {
+                    HStack {
+                        Text("Notifications")
+                            .font(AppTypography.h4)
+                            .foregroundColor(Color.appTextPrimary)
+                            .fontWeight(.bold)
                         
-                        if !notificationService.notifications.isEmpty {
-                            Button("Mark All Read") {
-                                Task {
-                                    await notificationService.markAllNotificationsAsRead()
+                        Spacer()
+                        
+                        HStack(spacing: 16) {
+                            Button(action: {
+                                showingNotificationSettings = true
+                            }) {
+                                Text("Settings")
+                                    .foregroundColor(.blue)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            if !notificationService.notifications.isEmpty {
+                                Menu {
+                                    Button(action: {
+                                        Task {
+                                            await notificationService.markAllNotificationsAsRead()
+                                        }
+                                    }) {
+                                        Label("Mark All Read", systemImage: "checkmark.circle")
+                                    }
+                                    
+                                    Button(role: .destructive, action: {
+                                        Task {
+                                            await notificationService.clearAllNotifications()
+                                        }
+                                    }) {
+                                        Label("Clear All", systemImage: "trash")
+                                    }
+                                } label: {
+                                    Image(systemName: "ellipsis.circle")
+                                        .foregroundColor(.blue)
                                 }
                             }
-                            .foregroundColor(.blue)
                         }
                     }
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .listRowBackground(Color.clear)
                 }
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.top, AppSpacing.lg)
                 
-                // Content
+                // Notifications List
                 if notificationService.notifications.isEmpty {
-                    VStack(spacing: 24) {
-                        Image(systemName: "bell.slash")
-                            .font(.system(size: 64))
-                            .foregroundColor(.secondary)
-                        
-                        VStack(spacing: 8) {
-                            Text("No Notifications")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                            
-                            Text("You're all caught up! Check back later for updates about your events and groups.")
-                                .font(.body)
+                    Section {
+                        VStack(spacing: 24) {
+                            Image(systemName: "bell.slash")
+                                .font(.system(size: 64))
                                 .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
+                            
+                            VStack(spacing: 8) {
+                                Text("No Notifications")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                
+                                Text("You're all caught up! Check back later for updates about your events and groups.")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal)
+                            }
+                            
+                            if !notificationService.isAuthorized {
+                                AppButton(
+                                    title: "Enable Notifications",
+                                    action: {
+                                        Task {
+                                            await notificationService.requestAuthorization()
+                                        }
+                                    },
+                                    style: .primary
+                                )
                                 .padding(.horizontal)
+                            }
                         }
-                        
-                        if !notificationService.isAuthorized {
-                            AppButton(
-                                title: "Enable Notifications",
-                                action: {
-                                    Task {
-                                        await notificationService.requestAuthorization()
-                                    }
-                                },
-                                style: .primary
-                            )
-                            .padding(.horizontal)
-                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                     }
-                    .padding()
                 } else {
-                    List {
+                    Section {
                         ForEach(notificationService.notifications) { notification in
                             NotificationRowView(notification: notification) {
                                 Task {
                                     await notificationService.markNotificationAsRead(notificationId: notification.id)
                                 }
                             }
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        }
+                    } footer: {
+                        if notificationService.unreadCount > 0 {
+                            Text("\(notificationService.unreadCount) unread")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
-                    .listStyle(PlainListStyle())
-                    .overlay(
-                        VStack {
-                            Spacer()
-                            if notificationService.unreadCount > 0 {
-                                HStack {
-                                    Text("\(notificationService.unreadCount) unread")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                }
-                                .padding(.horizontal)
-                                .padding(.bottom, 8)
-                            }
-                        }
-                    )
                 }
             }
+            .listStyle(PlainListStyle())
             .background(Color.appBackground)
             .refreshable {
                 await notificationService.fetchNotifications()
@@ -168,14 +184,20 @@ struct NotificationsView: View {
         
         private var notificationColor: Color {
             switch notification.type {
-            case .eventInvite, .eventReminder:
+            case .eventInvite, .eventReminder, .eventCreated:
                 return .blue
-            case .eventUpdate, .eventCancelled:
+            case .eventUpdate, .eventUpdated, .eventCancelled:
                 return .orange
-            case .groupInvite, .groupUpdate:
+            case .groupInvite, .groupUpdate, .newMemberJoined, .memberRemoved, .groupMessage:
                 return .green
-            case .attendeeJoined, .attendeeLeft, .waitlistPromoted:
+            case .attendeeJoined, .attendeeLeft, .waitlistPromoted, .attendeeStatusChanged:
                 return .purple
+            case .groupAdminAssigned:
+                return .indigo
+            case .systemAnnouncement:
+                return .red
+            case .passwordReset, .welcome:
+                return .cyan
             case .general:
                 return .gray
             }
@@ -183,16 +205,26 @@ struct NotificationsView: View {
         
         private var notificationIcon: String {
             switch notification.type {
-            case .eventInvite, .eventReminder:
+            case .eventInvite, .eventReminder, .eventCreated:
                 return "calendar.badge.plus"
-            case .eventUpdate, .eventCancelled:
+            case .eventUpdate, .eventUpdated, .eventCancelled:
                 return "calendar.badge.exclamationmark"
-            case .groupInvite, .groupUpdate:
+            case .groupInvite, .groupUpdate, .groupMessage:
                 return "person.3"
-            case .attendeeJoined, .attendeeLeft:
+            case .newMemberJoined, .attendeeJoined:
                 return "person.badge.plus"
-            case .waitlistPromoted:
+            case .memberRemoved, .attendeeLeft:
+                return "person.badge.minus"
+            case .waitlistPromoted, .attendeeStatusChanged:
                 return "arrow.up.circle"
+            case .groupAdminAssigned:
+                return "star.circle"
+            case .systemAnnouncement:
+                return "megaphone"
+            case .passwordReset:
+                return "key"
+            case .welcome:
+                return "hand.wave"
             case .general:
                 return "bell"
             }
@@ -296,6 +328,8 @@ struct NotificationsView: View {
                             style: .primary,
                             isLoading: preferencesViewModel.isLoading
                         )
+                        .padding(.top, AppSpacing.md)
+                        .disabled(preferencesViewModel.isLoading)
                         
                         Spacer(minLength: 100)
                     }
@@ -306,11 +340,14 @@ struct NotificationsView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
+                        Button(action: {
                             presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Text("Done")
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundColor(Color.appPrimary)
                         }
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                        .foregroundColor(Color.appPrimary)
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
             }
@@ -319,9 +356,12 @@ struct NotificationsView: View {
                     await preferencesViewModel.loadPreferences()
                 }
             }
-            .onTapGesture {
-                hideKeyboard()
-            }
+            .simultaneousGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        hideKeyboard()
+                    }
+            )
         }
         
         private func hideKeyboard() {

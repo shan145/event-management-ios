@@ -7,6 +7,7 @@ struct EventDetailView: View {
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
     @State private var showingAttendeeManagement = false
+    @State private var showingChat = false
     
     var body: some View {
         ScrollView {
@@ -19,6 +20,7 @@ struct EventDetailView: View {
                 eventStats
                 attendeesSection
                 waitlistSection
+                chatSection
                 
                 Spacer(minLength: 100)
             }
@@ -26,6 +28,12 @@ struct EventDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 HStack {
+                    Button(action: {
+                        showingChat = true
+                    }) {
+                        Image(systemName: "message.fill")
+                    }
+                    
                     if event.isOrganizer {
                         Button("Manage") {
                             showingAttendeeManagement = true
@@ -51,6 +59,12 @@ struct EventDetailView: View {
         }
         .sheet(isPresented: $showingAttendeeManagement) {
             EventAttendeeManagementView(event: event)
+        }
+        .sheet(isPresented: $showingChat) {
+            NavigationView {
+                EventChatView(eventId: event.id)
+                    .environmentObject(AuthManager.shared)
+            }
         }
         .alert("Delete Event", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
@@ -204,6 +218,34 @@ struct EventDetailView: View {
         } else {
             AnyView(EmptyView())
         }
+    }
+    
+    private var chatSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Event Chat")
+                .font(.headline)
+                .fontWeight(.semibold)
+            
+            Button(action: {
+                showingChat = true
+            }) {
+                HStack {
+                    Image(systemName: "message.fill")
+                        .font(.title3)
+                    Text("Open Chat")
+                        .fontWeight(.medium)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color.blue.opacity(0.1))
+                .foregroundColor(.blue)
+                .cornerRadius(12)
+            }
+        }
+        .padding(.horizontal)
     }
     
     private var actionButtonsOverlay: some View {

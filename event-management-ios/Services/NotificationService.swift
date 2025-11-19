@@ -238,9 +238,13 @@ class NotificationService: ObservableObject {
             await MainActor.run {
                 self.notifications = response.data.notifications
                 self.updateUnreadCount()
+                print("📬 Fetched \(self.notifications.count) notifications, \(self.unreadCount) unread")
             }
         } catch {
-            print("Failed to fetch notifications: \(error)")
+            print("❌ Failed to fetch notifications: \(error)")
+            if let apiError = error as? APIError {
+                print("   API Error: \(apiError)")
+            }
         }
     }
     
@@ -253,12 +257,36 @@ class NotificationService: ObservableObject {
         }
     }
     
+    @MainActor
     func markAllNotificationsAsRead() async {
         do {
             _ = try await apiService.markAllNotificationsAsRead()
             await fetchNotifications()
+            print("✅ All notifications marked as read")
         } catch {
-            print("Failed to mark all notifications as read: \(error)")
+            print("❌ Failed to mark all notifications as read: \(error)")
+        }
+    }
+    
+    @MainActor
+    func deleteNotification(notificationId: String) async {
+        do {
+            _ = try await apiService.deleteNotification(notificationId: notificationId)
+            await fetchNotifications()
+            print("✅ Notification deleted")
+        } catch {
+            print("❌ Failed to delete notification: \(error)")
+        }
+    }
+    
+    @MainActor
+    func clearAllNotifications() async {
+        do {
+            _ = try await apiService.clearAllNotifications()
+            await fetchNotifications()
+            print("✅ All notifications cleared")
+        } catch {
+            print("❌ Failed to clear all notifications: \(error)")
         }
     }
     
@@ -348,14 +376,31 @@ struct AppNotification: Codable, Identifiable {
     let data: NotificationData?
     
     var formattedDate: String {
-        // Format the date for display
-        if let date = ISO8601DateFormatter().date(from: createdAt) {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .short
-            return formatter.string(from: date)
+        // Parse the ISO8601 date string (UTC)
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        // Try with fractional seconds first, then without
+        var date: Date?
+        if let parsedDate = isoFormatter.date(from: createdAt) {
+            date = parsedDate
+        } else {
+            isoFormatter.formatOptions = [.withInternetDateTime]
+            date = isoFormatter.date(from: createdAt)
         }
-        return createdAt
+        
+        guard let date = date else {
+            return createdAt
+        }
+        
+        // Convert to Eastern Time
+        let etTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
+        let formatter = DateFormatter()
+        formatter.timeZone = etTimeZone
+        formatter.dateFormat = "MM/dd/yyyy hh:mm a 'ET'"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        return formatter.string(from: date)
     }
 }
 
@@ -363,12 +408,22 @@ enum NotificationType: String, Codable {
     case eventInvite = "event_invite"
     case eventReminder = "event_reminder"
     case eventUpdate = "event_update"
+    case eventUpdated = "event_updated"
+    case eventCreated = "event_created"
     case eventCancelled = "event_cancelled"
+    case attendeeStatusChanged = "attendee_status_changed"
     case groupInvite = "group_invite"
     case groupUpdate = "group_update"
+    case groupAdminAssigned = "group_admin_assigned"
+    case newMemberJoined = "new_member_joined"
+    case memberRemoved = "member_removed"
+    case groupMessage = "group_message"
     case attendeeJoined = "attendee_joined"
     case attendeeLeft = "attendee_left"
     case waitlistPromoted = "waitlist_promoted"
+    case systemAnnouncement = "system_announcement"
+    case passwordReset = "password_reset"
+    case welcome = "welcome"
     case general = "general"
 }
 

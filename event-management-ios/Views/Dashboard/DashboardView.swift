@@ -458,6 +458,7 @@ struct DashboardEventCardView: View {
     @State private var showingNotGoingAlert = false
     @State private var showingDuplicateEvent = false
     @State private var showingEmailAttendees = false
+    @State private var showingChat = false
     @State private var isJoiningWaitlist = false
     @State private var isMarkingNotGoing = false
     
@@ -647,9 +648,23 @@ struct DashboardEventCardView: View {
                     }
                     .buttonStyle(ModernCardButtonStyle())
                     .frame(maxWidth: .infinity)
+                    
+                    Button(action: {
+                        showingChat = true
+                    }) {
+                        HStack(spacing: AppSpacing.sm) {
+                            Image(systemName: "message.fill")
+                                .font(.system(size: 16))
+                            Text("Open Chat")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(ModernCardButtonStyle())
+                    .frame(maxWidth: .infinity)
                 }
             } else {
-                // For past events, only show "View Attendees" button
+                // For past events, show "View Attendees" and "Open Chat" buttons
                 VStack(spacing: AppSpacing.sm) {
                     Button(action: {
                         showingAttendees = true
@@ -658,6 +673,20 @@ struct DashboardEventCardView: View {
                             Image(systemName: "eye")
                                 .font(.system(size: 16))
                             Text("View Attendees")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(ModernCardButtonStyle())
+                    .frame(maxWidth: .infinity)
+                    
+                    Button(action: {
+                        showingChat = true
+                    }) {
+                        HStack(spacing: AppSpacing.sm) {
+                            Image(systemName: "message.fill")
+                                .font(.system(size: 16))
+                            Text("Open Chat")
                                 .font(.system(size: 15, weight: .medium, design: .rounded))
                             Spacer()
                         }
@@ -747,6 +776,14 @@ struct DashboardEventCardView: View {
             EventEmailView(event: event)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showingChat) {
+            NavigationView {
+                EventChatView(eventId: event.id)
+                    .environmentObject(authManager)
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
         .alert("Delete Event", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {

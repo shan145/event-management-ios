@@ -589,6 +589,18 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
     
+    func deleteNotification(notificationId: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/notifications/\(notificationId)")!
+        let request = createRequest(url: url, method: "DELETE")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func clearAllNotifications() async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/notifications")!
+        let request = createRequest(url: url, method: "DELETE")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
     // MARK: - Group Admin Endpoints
     
     // Note: This server doesn't support listing/revoking individual invites
@@ -743,6 +755,44 @@ class APIService: ObservableObject {
         let body = try JSONEncoder().encode(requestBody)
         let request = createRequest(url: url, method: "POST", body: body)
         return try await performRequest(request, responseType: TestPushNotificationResponse.self)
+    }
+    
+    // MARK: - Message Endpoints
+    
+    func getMessages(eventId: String, limit: Int? = nil, before: String? = nil, since: String? = nil) async throws -> MessagesResponse {
+        var components = URLComponents(string: "\(baseURL)/messages/event/\(eventId)")
+        var queryItems: [URLQueryItem] = []
+        
+        if let limit = limit {
+            queryItems.append(URLQueryItem(name: "limit", value: "\(limit)"))
+        }
+        
+        if let before = before {
+            queryItems.append(URLQueryItem(name: "before", value: before))
+        }
+        
+        if let since = since {
+            queryItems.append(URLQueryItem(name: "since", value: since))
+        }
+        
+        if !queryItems.isEmpty {
+            components?.queryItems = queryItems
+        }
+        
+        guard let url = components?.url else {
+            throw APIError.invalidURL
+        }
+        
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: MessagesResponse.self)
+    }
+    
+    func sendMessage(eventId: String, content: String) async throws -> SendMessageResponse {
+        let url = URL(string: "\(baseURL)/messages/event/\(eventId)")!
+        let requestBody = SendMessageRequest(content: content)
+        let body = try JSONEncoder().encode(requestBody)
+        let request = createRequest(url: url, method: "POST", body: body)
+        return try await performRequest(request, responseType: SendMessageResponse.self)
     }
 }
 
