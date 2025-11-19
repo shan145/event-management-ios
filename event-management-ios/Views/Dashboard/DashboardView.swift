@@ -28,9 +28,9 @@ struct DashboardView: View {
             HStack(spacing: 0) {
                 Button(action: { selectedTab = 0 }) {
                     HStack(spacing: AppSpacing.xs) {
-                        Image(systemName: "person.3")
+                        Image(systemName: "calendar")
                             .font(.system(size: 16))
-                        Text("My Groups")
+                        Text("My Events")
                             .font(AppTypography.body1)
                             .fontWeight(selectedTab == 0 ? .bold : .regular)
                     }
@@ -41,9 +41,9 @@ struct DashboardView: View {
                 
                 Button(action: { selectedTab = 1 }) {
                     HStack(spacing: AppSpacing.xs) {
-                        Image(systemName: "calendar")
+                        Image(systemName: "person.3")
                             .font(.system(size: 16))
-                        Text("My Events")
+                        Text("My Groups")
                             .font(AppTypography.body1)
                             .fontWeight(selectedTab == 1 ? .bold : .regular)
                     }
@@ -62,9 +62,9 @@ struct DashboardView: View {
             
             // Tab Content
             if selectedTab == 0 {
-                GroupsTabView(viewModel: viewModel)
-            } else {
                 EventsTabView(viewModel: viewModel)
+            } else {
+                GroupsTabView(viewModel: viewModel)
             }
         }
         .background(Color.appBackground)
@@ -940,7 +940,7 @@ struct GroupEventsListView: View {
                             .opacity(0)
                     }
                     .padding(.horizontal, AppSpacing.lg)
-                    .padding(.top, AppSpacing.md)
+                    .padding(.top, AppSpacing.lg)
                     
                     Divider()
                         .background(Color.appDivider)
@@ -965,6 +965,7 @@ struct GroupEventsListView: View {
                         .foregroundColor(Color.grey600)
                     Spacer()
                 } else if groupEvents.isEmpty {
+                    Spacer()
                     emptyStateView(
                         icon: "calendar",
                         title: selectedTimeFilter == .upcoming ? "No upcoming events" : "No past events",
@@ -972,6 +973,7 @@ struct GroupEventsListView: View {
                                 "This group doesn't have any upcoming events" : 
                                 "This group doesn't have any past events"
                     )
+                    Spacer()
                 } else {
                     ScrollView {
                         LazyVStack(spacing: AppSpacing.md) {
@@ -1007,7 +1009,7 @@ struct GroupEventsListView: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(AppSpacing.xl)
+        .padding(AppSpacing.lg)
     }
     
     private var groupEvents: [Event] {

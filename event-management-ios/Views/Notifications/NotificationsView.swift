@@ -34,301 +34,382 @@ struct NotificationsView: View {
                 }
                 .padding(.horizontal, AppSpacing.lg)
                 .padding(.top, AppSpacing.lg)
-            
-            // Content
-            if notificationService.notifications.isEmpty {
-                VStack(spacing: 24) {
-                    Image(systemName: "bell.slash")
-                        .font(.system(size: 64))
-                        .foregroundColor(.secondary)
-                    
-                    VStack(spacing: 8) {
-                        Text("No Notifications")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Text("You're all caught up! Check back later for updates about your events and groups.")
-                            .font(.body)
+                
+                // Content
+                if notificationService.notifications.isEmpty {
+                    VStack(spacing: 24) {
+                        Image(systemName: "bell.slash")
+                            .font(.system(size: 64))
                             .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                        
+                        VStack(spacing: 8) {
+                            Text("No Notifications")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text("You're all caught up! Check back later for updates about your events and groups.")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
+                        
+                        if !notificationService.isAuthorized {
+                            AppButton(
+                                title: "Enable Notifications",
+                                action: {
+                                    Task {
+                                        await notificationService.requestAuthorization()
+                                    }
+                                },
+                                style: .primary
+                            )
                             .padding(.horizontal)
+                        }
                     }
-                    
-                    if !notificationService.isAuthorized {
-                        AppButton(
-                            title: "Enable Notifications",
-                            action: {
+                    .padding()
+                } else {
+                    List {
+                        ForEach(notificationService.notifications) { notification in
+                            NotificationRowView(notification: notification) {
                                 Task {
-                                    await notificationService.requestAuthorization()
+                                    await notificationService.markNotificationAsRead(notificationId: notification.id)
                                 }
-                            },
-                            style: .primary
-                        )
-                        .padding(.horizontal)
-                    }
-                }
-                .padding()
-            } else {
-                List {
-                    ForEach(notificationService.notifications) { notification in
-                        NotificationRowView(notification: notification) {
-                            Task {
-                                await notificationService.markNotificationAsRead(notificationId: notification.id)
                             }
                         }
                     }
-                }
-                .listStyle(PlainListStyle())
-                .overlay(
-                    VStack {
-                        Spacer()
-                        if notificationService.unreadCount > 0 {
-                            HStack {
-                                Text("\(notificationService.unreadCount) unread")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
+                    .listStyle(PlainListStyle())
+                    .overlay(
+                        VStack {
+                            Spacer()
+                            if notificationService.unreadCount > 0 {
+                                HStack {
+                                    Text("\(notificationService.unreadCount) unread")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal)
+                                .padding(.bottom, 8)
                             }
-                            .padding(.horizontal)
-                            .padding(.bottom, 8)
                         }
-                    }
-                )
+                    )
+                }
             }
-        }
-        .background(Color.appBackground)
-        .refreshable {
-            await notificationService.fetchNotifications()
-        }
-        .sheet(isPresented: $showingNotificationSettings) {
-            NotificationSettingsView()
-        }
-        .onAppear {
-            Task {
+            .background(Color.appBackground)
+            .refreshable {
                 await notificationService.fetchNotifications()
             }
-        }
-    }
-}
-
-// MARK: - Notification Row View
-
-struct NotificationRowView: View {
-    let notification: AppNotification
-    let onTap: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                // Notification Icon
-                Circle()
-                    .fill(notificationColor)
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Image(systemName: notificationIcon)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                    )
-                
-                // Notification Content
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(notification.title)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
-                        
-                        Spacer()
-                        
-                        Text(notification.formattedDate)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Text(notification.message)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                    
-                    if !notification.isRead {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 8, height: 8)
-                            .padding(.top, 4)
-                    }
+            .sheet(isPresented: $showingNotificationSettings) {
+                NotificationSettingsView()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+            .onAppear {
+                Task {
+                    await notificationService.fetchNotifications()
                 }
             }
-            .padding(.vertical, 4)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .opacity(notification.isRead ? 0.7 : 1.0)
-    }
-    
-    private var notificationColor: Color {
-        switch notification.type {
-        case .eventInvite, .eventReminder:
-            return .blue
-        case .eventUpdate, .eventCancelled:
-            return .orange
-        case .groupInvite, .groupUpdate:
-            return .green
-        case .attendeeJoined, .attendeeLeft, .waitlistPromoted:
-            return .purple
-        case .general:
-            return .gray
         }
     }
     
-    private var notificationIcon: String {
-        switch notification.type {
-        case .eventInvite, .eventReminder:
-            return "calendar.badge.plus"
-        case .eventUpdate, .eventCancelled:
-            return "calendar.badge.exclamationmark"
-        case .groupInvite, .groupUpdate:
-            return "person.3"
-        case .attendeeJoined, .attendeeLeft:
-            return "person.badge.plus"
-        case .waitlistPromoted:
-            return "arrow.up.circle"
-        case .general:
-            return "bell"
-        }
-    }
-}
-
-// MARK: - Notification Settings View
-
-struct NotificationSettingsView: View {
-    @Environment(\.presentationMode) var presentationMode
-    @StateObject private var notificationService = NotificationService.shared
-    @StateObject private var preferencesViewModel = PreferencesSettingsViewModel()
+    // MARK: - Notification Row View
     
-    var body: some View {
-        VStack(spacing: 0) {
-            // Custom Header
-            HStack {
-                Button("Done") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-                .foregroundColor(.blue)
-                
-                Spacer()
-                
-                Text("Notification Settings")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                
-                Spacer()
-                
-                // Empty space for balance
-                Color.clear
-                    .frame(width: 50)
-            }
-            .padding(.horizontal)
-            .padding(.top, AppSpacing.lg)
-            
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Notification Authorization Status
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Notification Settings")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                        
+    struct NotificationRowView: View {
+        let notification: AppNotification
+        let onTap: () -> Void
+        
+        var body: some View {
+            Button(action: onTap) {
+                HStack(spacing: 12) {
+                    // Notification Icon
+                    Circle()
+                        .fill(notificationColor)
+                        .frame(width: 40, height: 40)
+                        .overlay(
+                            Image(systemName: notificationIcon)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.white)
+                        )
+                    
+                    // Notification Content
+                    VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Image(systemName: notificationService.isAuthorized ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundColor(notificationService.isAuthorized ? .green : .red)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(notificationService.isAuthorized ? "Notifications Enabled" : "Notifications Disabled")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                
-                                Text(notificationService.isAuthorized ? "You'll receive notifications for important updates" : "Enable notifications to stay updated")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                            Text(notification.title)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
                             
                             Spacer()
                             
-                            if !notificationService.isAuthorized {
-                                AppButton(
-                                    title: "Enable",
-                                    action: {
-                                        Task {
-                                            await notificationService.requestAuthorization()
-                                        }
-                                    },
-                                    style: .primary
-                                )
-                            }
+                            Text(notification.formattedDate)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
-                    }
-                    
-                    // Notification Preferences
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Notification Preferences")
-                            .font(.headline)
-                            .fontWeight(.semibold)
                         
-                        VStack(spacing: 12) {
-                            Toggle("Event Reminders", isOn: $preferencesViewModel.eventReminders)
-                                .toggleStyle(SwitchToggleStyle(tint: .blue))
-                            
-                            Toggle("Group Updates", isOn: $preferencesViewModel.groupUpdates)
-                                .toggleStyle(SwitchToggleStyle(tint: .blue))
-                            
-                            Toggle("Email Notifications", isOn: $preferencesViewModel.emailNotifications)
-                                .toggleStyle(SwitchToggleStyle(tint: .blue))
-                            
-                            Toggle("Push Notifications", isOn: $preferencesViewModel.pushNotifications)
-                                .toggleStyle(SwitchToggleStyle(tint: .blue))
+                        Text(notification.message)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                        
+                        if !notification.isRead {
+                            Circle()
+                                .fill(Color.blue)
+                                .frame(width: 8, height: 8)
+                                .padding(.top, 4)
                         }
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
                     }
-                    
-                    // Save Button
-                    AppButton(
-                        title: "Save Settings",
-                        action: {
-                            Task {
-                                await preferencesViewModel.savePreferences()
-                                presentationMode.wrappedValue.dismiss()
-                            }
-                        },
-                        style: .primary,
-                        isLoading: preferencesViewModel.isLoading
-                    )
-                    
-                    Spacer(minLength: 100)
                 }
-                .padding()
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .opacity(notification.isRead ? 0.7 : 1.0)
+        }
+        
+        private var notificationColor: Color {
+            switch notification.type {
+            case .eventInvite, .eventReminder:
+                return .blue
+            case .eventUpdate, .eventCancelled:
+                return .orange
+            case .groupInvite, .groupUpdate:
+                return .green
+            case .attendeeJoined, .attendeeLeft, .waitlistPromoted:
+                return .purple
+            case .general:
+                return .gray
             }
         }
-        .onAppear {
-            preferencesViewModel.loadPreferences()
-        }
-        .onTapGesture {
-            hideKeyboard()
+        
+        private var notificationIcon: String {
+            switch notification.type {
+            case .eventInvite, .eventReminder:
+                return "calendar.badge.plus"
+            case .eventUpdate, .eventCancelled:
+                return "calendar.badge.exclamationmark"
+            case .groupInvite, .groupUpdate:
+                return "person.3"
+            case .attendeeJoined, .attendeeLeft:
+                return "person.badge.plus"
+            case .waitlistPromoted:
+                return "arrow.up.circle"
+            case .general:
+                return "bell"
+            }
         }
     }
     
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    // MARK: - Notification Settings View
+    
+    struct NotificationSettingsView: View {
+        @Environment(\.presentationMode) var presentationMode
+        @StateObject private var notificationService = NotificationService.shared
+        @StateObject private var preferencesViewModel = PreferencesSettingsViewModel()
+        
+        var body: some View {
+            NavigationView {
+                ScrollView {
+                    VStack(spacing: AppSpacing.xl) {
+                        // Notification Authorization Status
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Notification Settings")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            
+                            HStack {
+                                Image(systemName: notificationService.isAuthorized ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                    .foregroundColor(notificationService.isAuthorized ? .green : .red)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(notificationService.isAuthorized ? "Notifications Enabled" : "Notifications Disabled")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    
+                                    Text(notificationService.isAuthorized ? "You'll receive notifications for important updates" : "Enable notifications to stay updated")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                if !notificationService.isAuthorized {
+                                    AppButton(
+                                        title: "Enable",
+                                        action: {
+                                            Task {
+                                                await notificationService.requestAuthorization()
+                                            }
+                                        },
+                                        style: .primary
+                                    )
+                                }
+                            }
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(12)
+                        }
+                        
+                        // Notification Preferences
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text("Notification Preferences")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            
+                            EmailPreferenceSection(
+                                isOn: $preferencesViewModel.emailNotificationsEnabled,
+                                isLoading: preferencesViewModel.isLoading
+                            )
+                            
+                            NotificationPreferenceSection(
+                                title: "Push Notifications",
+                                rows: [
+                                    NotificationPreferenceRow(title: "Event Invites", binding: $preferencesViewModel.pushEventInvites),
+                                    NotificationPreferenceRow(title: "Event Reminders", binding: $preferencesViewModel.pushEventReminders),
+                                    NotificationPreferenceRow(title: "Event Updates", binding: $preferencesViewModel.pushEventUpdates),
+                                    NotificationPreferenceRow(title: "Event Cancellations", binding: $preferencesViewModel.pushEventCancellations),
+                                    NotificationPreferenceRow(title: "Group Invites", binding: $preferencesViewModel.pushGroupInvites),
+                                    NotificationPreferenceRow(title: "Group Updates", binding: $preferencesViewModel.pushGroupUpdates),
+                                    NotificationPreferenceRow(title: "System Announcements", binding: $preferencesViewModel.pushSystemAnnouncements)
+                                ],
+                                isLoading: preferencesViewModel.isLoading
+                            )
+                            
+                            if let errorMessage = preferencesViewModel.errorMessage {
+                                Text(errorMessage)
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            } else if preferencesViewModel.showSuccess {
+                                Text("Preferences updated successfully")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                        }
+                        
+                        // Save Button
+                        AppButton(
+                            title: "Save Settings",
+                            action: {
+                                Task {
+                                    await preferencesViewModel.savePreferences()
+                                }
+                            },
+                            style: .primary,
+                            isLoading: preferencesViewModel.isLoading
+                        )
+                        
+                        Spacer(minLength: 100)
+                    }
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.vertical, AppSpacing.xl)
+                }
+                .navigationTitle("Notification Settings")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color.appPrimary)
+                    }
+                }
+            }
+            .onAppear {
+                Task {
+                    await preferencesViewModel.loadPreferences()
+                }
+            }
+            .onTapGesture {
+                hideKeyboard()
+            }
+        }
+        
+        private func hideKeyboard() {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
     }
-}
-
-// MARK: - Preview
-
-struct NotificationsView_Previews: PreviewProvider {
-    static var previews: some View {
-        NotificationsView()
+    
+    // MARK: - Preview
+    
+    struct NotificationsView_Previews: PreviewProvider {
+        static var previews: some View {
+            NotificationsView()
+        }
     }
-}
+    
+    struct NotificationPreferenceSection: View {
+        let title: String
+        let rows: [NotificationPreferenceRow]
+        let isLoading: Bool
+        
+        var body: some View {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                
+                VStack(spacing: 0) {
+                    ForEach(rows.indices, id: \.self) { index in
+                        HStack {
+                            Text(rows[index].title)
+                                .font(.body)
+                            Spacer()
+                            Toggle("", isOn: rows[index].binding)
+                                .labelsHidden()
+                                .disabled(isLoading)
+                        }
+                        .padding(.vertical, 8)
+                        
+                        if index < rows.count - 1 {
+                            Divider()
+                        }
+                    }
+                }
+                .padding()
+                .background(Color.gray.opacity(0.08))
+                .cornerRadius(12)
+            }
+        }
+    }
+    
+    struct EmailPreferenceSection: View {
+        @Binding var isOn: Bool
+        let isLoading: Bool
+        
+        var body: some View {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Email Notifications")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Receive All Email Notifications")
+                                .font(.body)
+                                .fontWeight(.medium)
+                            
+                            Text("Includes event invites, reminders, updates, cancellations, group invites/updates, and system announcements.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Toggle("", isOn: $isOn)
+                            .labelsHidden()
+                            .disabled(isLoading)
+                    }
+                }
+                .padding()
+                .background(Color.gray.opacity(0.08))
+                .cornerRadius(12)
+            }
+        }
+    }
+    
+    struct NotificationPreferenceRow {
+        let title: String
+        let binding: Binding<Bool>
+    }
 }

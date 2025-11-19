@@ -43,8 +43,14 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         print("📱 Device token received: \(tokenString)")
         
-        // Register device token with our server
-        NotificationService.shared.setDeviceToken(tokenString)
+        // Only register device token if user is authenticated
+        // The token will be registered after login/signup
+        if AuthManager.shared.isAuthenticated {
+            NotificationService.shared.setDeviceToken(tokenString)
+        } else {
+            // Store token temporarily, will be registered after login
+            NotificationService.shared.storeDeviceTokenForLater(tokenString)
+        }
     }
     
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {

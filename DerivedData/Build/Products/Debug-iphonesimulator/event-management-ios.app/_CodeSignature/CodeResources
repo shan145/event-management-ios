@@ -4,9 +4,21 @@
 <dict>
 	<key>files</key>
 	<dict>
+		<key>AppIcon60x60@2x.png</key>
+		<data>
+		81gWGmet9qmEpXht4mP+HqEMhxQ=
+		</data>
+		<key>AppIcon76x76@2x~ipad.png</key>
+		<data>
+		HQmYhSWccg3PEZxM2y7ZaOUXXeg=
+		</data>
+		<key>Assets.car</key>
+		<data>
+		wemTRwQa0kQ+W/XYrtoM54SzVSE=
+		</data>
 		<key>Info.plist</key>
 		<data>
-		R0pvl8vexIMNK9mryjk/z/htRE8=
+		qf5L/77cEpAXj6GLAXm5vdfNljw=
 		</data>
 		<key>PkgInfo</key>
 		<data>
@@ -18,11 +30,32 @@
 		</data>
 		<key>event-management-ios.debug.dylib</key>
 		<data>
-		HWYfHDWN8wRcpp0vHl88oZe5U+E=
+		s4RKNlG6Uua4IjtEnfDVpGYfd9A=
 		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
+		<key>AppIcon60x60@2x.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Dym430lXYDpoicqcBrlwX+L6ciUfElPsrOJynr8z+ks=
+			</data>
+		</dict>
+		<key>AppIcon76x76@2x~ipad.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			9kVTziVgmTxzNXqYZ2oqnJtZm/5GA8I3VEgmdKKzh5I=
+			</data>
+		</dict>
+		<key>Assets.car</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			+ELoYYs7KXVnD9FaABAi86t6TjO44uhX2NMp+Ukl/bA=
+			</data>
+		</dict>
 		<key>__preview.dylib</key>
 		<dict>
 			<key>hash2</key>
@@ -34,7 +67,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			v/37pCyU3ZeM9vFz3VrZrEOU0M5xkbPqvUa4GxaVPbg=
+			AmVMoAZZrz6vPBdGyeaF+fi1h7/AscPGzaFCAD8G6ps=
 			</data>
 		</dict>
 	</dict>

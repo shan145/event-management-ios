@@ -14,6 +14,7 @@ class NotificationService: ObservableObject {
     private let apiService = APIService.shared
     private var realTimeTimer: Timer?
     private var deviceToken: String?
+    private var pendingDeviceToken: String? // Token received before authentication
     private let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
     
     private init() {
@@ -60,8 +61,29 @@ class NotificationService: ObservableObject {
     
     func setDeviceToken(_ token: String) {
         self.deviceToken = token
+        self.pendingDeviceToken = nil // Clear pending token
         Task {
             await registerDeviceToken(token)
+        }
+    }
+    
+    func storeDeviceTokenForLater(_ token: String) {
+        // Store token to register after user logs in
+        self.pendingDeviceToken = token
+        print("📱 Device token stored, will register after authentication")
+    }
+    
+    func registerPendingDeviceToken() {
+        // Called after user logs in to register any pending token
+        if let token = pendingDeviceToken {
+            print("📱 Registering pending device token after authentication")
+            setDeviceToken(token)
+        } else if let token = deviceToken {
+            // If we already have a token but it wasn't registered, register it now
+            print("📱 Re-registering device token after authentication")
+            Task {
+                await registerDeviceToken(token)
+            }
         }
     }
     

@@ -36,18 +36,18 @@
       },
       {
         "comment": "",
-        "key": "Groups",
+        "key": "Events",
         "location": {
           "startingColumn": 26,
-          "startingLine": 88
+          "startingLine": 90
         }
       },
       {
         "comment": "",
-        "key": "Events",
+        "key": "Groups",
         "location": {
           "startingColumn": 26,
-          "startingLine": 94
+          "startingLine": 97
         }
       },
       {
@@ -55,7 +55,7 @@
         "key": "Notifications",
         "location": {
           "startingColumn": 26,
-          "startingLine": 100
+          "startingLine": 103
         }
       },
       {
@@ -63,7 +63,7 @@
         "key": "Settings",
         "location": {
           "startingColumn": 26,
-          "startingLine": 107
+          "startingLine": 110
         }
       }
     ]

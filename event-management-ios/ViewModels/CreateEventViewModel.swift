@@ -116,6 +116,8 @@ class CreateEventViewModel: ObservableObject {
             setPreSelectedGroup(group)
         case .id(let groupId):
             self.selectedGroupId = groupId
+            // For ID-only case, we need to find the group in available groups
+            // This will be handled when loadAvailableGroups() is called
         }
     }
     
@@ -184,6 +186,13 @@ class CreateEventViewModel: ObservableObject {
                 }
             } else {
                 availableGroups = []
+            }
+            
+            // If we have a selectedGroupId but no preSelectedGroup (from duplication), find the group
+            if preSelectedGroup == nil && !selectedGroupId.isEmpty {
+                if let foundGroup = availableGroups.first(where: { $0.id == selectedGroupId }) {
+                    setPreSelectedGroup(foundGroup)
+                }
             }
         } catch {
             print("Failed to load groups: \(error)")

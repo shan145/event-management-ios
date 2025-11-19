@@ -46,8 +46,8 @@ struct CreateEventView: View {
                     // Event Details Section
                     eventDetailsSection
                     
-                    // Group Selection Section (only show if no pre-selected group)
-                    if preSelectedGroup == nil {
+                    // Group Selection Section (only show if no pre-selected group and not duplicating)
+                    if preSelectedGroup == nil && eventToDuplicate == nil {
                         groupSelectionSection
                     } else {
                         preSelectedGroupSection
@@ -218,7 +218,10 @@ struct CreateEventView: View {
                 .font(AppTypography.h4)
                 .foregroundColor(Color.appTextPrimary)
             
-            if let group = preSelectedGroup {
+            // Use preSelectedGroup from parameter or from viewModel (for duplicated events)
+            let group = preSelectedGroup ?? viewModel.preSelectedGroup
+            
+            if let group = group {
                 HStack(spacing: AppSpacing.md) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
@@ -230,7 +233,7 @@ struct CreateEventView: View {
                             .foregroundColor(Color.appTextPrimary)
                             .fontWeight(.medium)
                         
-                        Text("Event will be created for this group")
+                        Text(eventToDuplicate != nil ? "Event will be duplicated for this group" : "Event will be created for this group")
                             .font(AppTypography.body2)
                             .foregroundColor(Color.appTextSecondary)
                     }

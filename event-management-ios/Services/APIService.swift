@@ -717,6 +717,19 @@ class APIService: ObservableObject {
         let request = createRequest(url: url, method: "DELETE")
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
+
+    func getNotificationPreferences() async throws -> NotificationPreferencesResponse {
+        let url = URL(string: "\(baseURL)/notifications/preferences")!
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: NotificationPreferencesResponse.self)
+    }
+
+    func updateNotificationPreferences(preferences: UpdateNotificationPreferencesRequest) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/notifications/preferences")!
+        let body = try JSONEncoder().encode(preferences)
+        let request = createRequest(url: url, method: "PUT", body: body)
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
     
     func getDeviceTokens() async throws -> DeviceTokensResponse {
         let url = URL(string: "\(baseURL)/notifications/device-tokens")!
@@ -798,6 +811,40 @@ struct DeviceTokenRequest: Codable {
     let token: String
     let platform: String
     let deviceId: String
+}
+
+struct NotificationPreferencesResponse: Codable {
+    let success: Bool
+    let data: NotificationPreferencesData
+}
+
+struct NotificationPreferencesData: Codable {
+    let preferences: NotificationPreferencesDTO
+}
+
+struct NotificationPreferencesDTO: Codable {
+    var email: NotificationPreferenceTypesDTO?
+    var push: NotificationPreferenceTypesDTO
+    var reminderTiming: ReminderTimingDTO?
+}
+
+struct NotificationPreferenceTypesDTO: Codable {
+    var eventInvites: Bool?
+    var eventReminders: Bool?
+    var eventUpdates: Bool?
+    var eventCancellations: Bool?
+    var groupInvites: Bool?
+    var groupUpdates: Bool?
+    var systemAnnouncements: Bool?
+}
+
+struct ReminderTimingDTO: Codable {
+    var eventReminder: Int?
+    var eventUpdate: Int?
+}
+
+struct UpdateNotificationPreferencesRequest: Codable {
+    let preferences: NotificationPreferencesDTO
 }
 
 struct TestPushNotificationRequest: Codable {

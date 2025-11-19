@@ -7,7 +7,7 @@
         "key": "Attendee Management",
         "location": {
           "startingColumn": 26,
-          "startingLine": 40
+          "startingLine": 49
         }
       },
       {
@@ -15,7 +15,7 @@
         "key": "Done",
         "location": {
           "startingColumn": 28,
-          "startingLine": 33
+          "startingLine": 42
         }
       },
       {
@@ -23,7 +23,7 @@
         "key": "Manage Attendees",
         "location": {
           "startingColumn": 26,
-          "startingLine": 57
+          "startingLine": 66
         }
       },
       {
@@ -31,7 +31,7 @@
         "key": "Going (%lld)",
         "location": {
           "startingColumn": 24,
-          "startingLine": 71
+          "startingLine": 80
         }
       },
       {
@@ -39,7 +39,7 @@
         "key": "Waitlist (%lld)",
         "location": {
           "startingColumn": 24,
-          "startingLine": 80
+          "startingLine": 89
         }
       },
       {
@@ -47,7 +47,47 @@
         "key": "Not Going (%lld)",
         "location": {
           "startingColumn": 24,
-          "startingLine": 89
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "Success",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 261
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 266
+        }
+      },
+      {
+        "comment": "",
+        "key": "Processing...",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 277
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 262
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 267
         }
       },
       {
@@ -55,7 +95,7 @@
         "key": "%@ %@",
         "location": {
           "startingColumn": 22,
-          "startingLine": 231
+          "startingLine": 301
         }
       }
     ]

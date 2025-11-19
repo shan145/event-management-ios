@@ -281,6 +281,10 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #if __has_warning("-Watimport-in-framework-header")
 #pragma clang diagnostic ignored "-Watimport-in-framework-header"
 #endif
+@import Foundation;
+@import ObjectiveC;
+@import UIKit;
+@import UserNotifications;
 #endif
 
 #endif
@@ -302,6 +306,21 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #endif
 
 #if defined(__OBJC__)
+
+@class UIApplication;
+@class NSData;
+@class UNUserNotificationCenter;
+@class UNNotification;
+@class UNNotificationResponse;
+SWIFT_CLASS("_TtC20event_management_ios11AppDelegate")
+@interface AppDelegate : NSObject <UIApplicationDelegate, UNUserNotificationCenterDelegate>
+- (BOOL)application:(UIApplication * _Nonnull)application didFinishLaunchingWithOptions:(NSDictionary<UIApplicationLaunchOptionsKey, id> * _Nullable)launchOptions SWIFT_WARN_UNUSED_RESULT;
+- (void)application:(UIApplication * _Nonnull)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData * _Nonnull)deviceToken;
+- (void)application:(UIApplication * _Nonnull)application didFailToRegisterForRemoteNotificationsWithError:(NSError * _Nonnull)error;
+- (void)userNotificationCenter:(UNUserNotificationCenter * _Nonnull)center willPresentNotification:(UNNotification * _Nonnull)notification withCompletionHandler:(void (^ _Nonnull)(UNNotificationPresentationOptions))completionHandler;
+- (void)userNotificationCenter:(UNUserNotificationCenter * _Nonnull)center didReceiveNotificationResponse:(UNNotificationResponse * _Nonnull)response withCompletionHandler:(void (^ _Nonnull)(void))completionHandler;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
 
 #endif
 #if __has_attribute(external_source_symbol)

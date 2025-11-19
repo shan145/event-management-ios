@@ -7,7 +7,23 @@
         "key": "Delete Group",
         "location": {
           "startingColumn": 16,
-          "startingLine": 83
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "Success",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 62
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 69
         }
       },
       {
@@ -15,7 +31,7 @@
         "key": "Group Admin",
         "location": {
           "startingColumn": 26,
-          "startingLine": 23
+          "startingLine": 22
         }
       },
       {
@@ -23,7 +39,7 @@
         "key": "Done",
         "location": {
           "startingColumn": 28,
-          "startingLine": 16
+          "startingLine": 15
         }
       },
       {
@@ -31,31 +47,7 @@
         "key": "Invite",
         "location": {
           "startingColumn": 28,
-          "startingLine": 29
-        }
-      },
-      {
-        "comment": "",
-        "key": "Members",
-        "location": {
-          "startingColumn": 24,
-          "startingLine": 42
-        }
-      },
-      {
-        "comment": "",
-        "key": "Invites",
-        "location": {
-          "startingColumn": 24,
-          "startingLine": 51
-        }
-      },
-      {
-        "comment": "",
-        "key": "Settings",
-        "location": {
-          "startingColumn": 24,
-          "startingLine": 60
+          "startingLine": 28
         }
       },
       {
@@ -63,7 +55,7 @@
         "key": "Cancel",
         "location": {
           "startingColumn": 20,
-          "startingLine": 84
+          "startingLine": 47
         }
       },
       {
@@ -71,7 +63,7 @@
         "key": "Delete",
         "location": {
           "startingColumn": 20,
-          "startingLine": 85
+          "startingLine": 48
         }
       },
       {
@@ -79,15 +71,39 @@
         "key": "Are you sure you want to delete this group? This action cannot be undone.",
         "location": {
           "startingColumn": 18,
-          "startingLine": 92
+          "startingLine": 55
         }
       },
       {
         "comment": "",
-        "key": "%lld members • %lld pending invites",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "Operation completed successfully",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 70
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld members",
         "location": {
           "startingColumn": 22,
-          "startingLine": 120
+          "startingLine": 97
         }
       },
       {
@@ -95,7 +111,31 @@
         "key": "Remove Member",
         "location": {
           "startingColumn": 16,
-          "startingLine": 167
+          "startingLine": 183
+        }
+      },
+      {
+        "comment": "",
+        "key": "Make Admin",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 195
+        }
+      },
+      {
+        "comment": "",
+        "key": "Remove Admin",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 207
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Member",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 126
         }
       },
       {
@@ -103,7 +143,7 @@
         "key": "Admins",
         "location": {
           "startingColumn": 34,
-          "startingLine": 140
+          "startingLine": 133
         }
       },
       {
@@ -111,7 +151,15 @@
         "key": "Members",
         "location": {
           "startingColumn": 34,
-          "startingLine": 153
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Member by Email",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 127
         }
       },
       {
@@ -119,7 +167,7 @@
         "key": "Cancel",
         "location": {
           "startingColumn": 20,
-          "startingLine": 168
+          "startingLine": 184
         }
       },
       {
@@ -127,7 +175,7 @@
         "key": "Remove",
         "location": {
           "startingColumn": 20,
-          "startingLine": 169
+          "startingLine": 185
         }
       },
       {
@@ -135,7 +183,55 @@
         "key": "Are you sure you want to remove this member from the group?",
         "location": {
           "startingColumn": 18,
-          "startingLine": 177
+          "startingLine": 193
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 196
+        }
+      },
+      {
+        "comment": "",
+        "key": "Make Admin",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 197
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to make this user a group admin?",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 205
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 208
+        }
+      },
+      {
+        "comment": "",
+        "key": "Remove Admin",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 209
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to remove admin privileges from this user?",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 217
         }
       },
       {
@@ -143,7 +239,7 @@
         "key": "Revoke Invite",
         "location": {
           "startingColumn": 16,
-          "startingLine": 225
+          "startingLine": 265
         }
       },
       {
@@ -151,7 +247,7 @@
         "key": "Pending Invites",
         "location": {
           "startingColumn": 38,
-          "startingLine": 214
+          "startingLine": 254
         }
       },
       {
@@ -159,7 +255,7 @@
         "key": "No Pending Invites",
         "location": {
           "startingColumn": 34,
-          "startingLine": 200
+          "startingLine": 240
         }
       },
       {
@@ -167,7 +263,7 @@
         "key": "All invites have been accepted or expired.",
         "location": {
           "startingColumn": 34,
-          "startingLine": 204
+          "startingLine": 244
         }
       },
       {
@@ -175,7 +271,7 @@
         "key": "Cancel",
         "location": {
           "startingColumn": 20,
-          "startingLine": 226
+          "startingLine": 266
         }
       },
       {
@@ -183,7 +279,7 @@
         "key": "Revoke",
         "location": {
           "startingColumn": 20,
-          "startingLine": 227
+          "startingLine": 267
         }
       },
       {
@@ -191,7 +287,7 @@
         "key": "Are you sure you want to revoke this invite?",
         "location": {
           "startingColumn": 18,
-          "startingLine": 235
+          "startingLine": 275
         }
       },
       {
@@ -199,7 +295,7 @@
         "key": "Delete Group",
         "location": {
           "startingColumn": 16,
-          "startingLine": 303
+          "startingLine": 343
         }
       },
       {
@@ -207,7 +303,7 @@
         "key": "Group Information",
         "location": {
           "startingColumn": 34,
-          "startingLine": 249
+          "startingLine": 289
         }
       },
       {
@@ -215,7 +311,7 @@
         "key": "Group Settings",
         "location": {
           "startingColumn": 34,
-          "startingLine": 272
+          "startingLine": 312
         }
       },
       {
@@ -223,7 +319,7 @@
         "key": "Danger Zone",
         "location": {
           "startingColumn": 34,
-          "startingLine": 295
+          "startingLine": 335
         }
       },
       {
@@ -231,7 +327,7 @@
         "key": "Group Name",
         "location": {
           "startingColumn": 26,
-          "startingLine": 251
+          "startingLine": 291
         }
       },
       {
@@ -239,7 +335,7 @@
         "key": "Created",
         "location": {
           "startingColumn": 26,
-          "startingLine": 258
+          "startingLine": 298
         }
       },
       {
@@ -247,7 +343,7 @@
         "key": "Total Members",
         "location": {
           "startingColumn": 26,
-          "startingLine": 265
+          "startingLine": 305
         }
       },
       {
@@ -255,7 +351,7 @@
         "key": "%lld",
         "location": {
           "startingColumn": 26,
-          "startingLine": 267
+          "startingLine": 307
         }
       },
       {
@@ -263,7 +359,7 @@
         "key": "Allow Member Invites",
         "location": {
           "startingColumn": 24,
-          "startingLine": 273
+          "startingLine": 313
         }
       },
       {
@@ -271,7 +367,7 @@
         "key": "Require Admin Approval",
         "location": {
           "startingColumn": 24,
-          "startingLine": 280
+          "startingLine": 320
         }
       },
       {
@@ -279,7 +375,7 @@
         "key": "Public Group",
         "location": {
           "startingColumn": 24,
-          "startingLine": 287
+          "startingLine": 327
         }
       },
       {
@@ -287,7 +383,7 @@
         "key": "Delete Group",
         "location": {
           "startingColumn": 24,
-          "startingLine": 296
+          "startingLine": 336
         }
       },
       {
@@ -295,7 +391,7 @@
         "key": "Cancel",
         "location": {
           "startingColumn": 20,
-          "startingLine": 304
+          "startingLine": 344
         }
       },
       {
@@ -303,7 +399,7 @@
         "key": "Delete",
         "location": {
           "startingColumn": 20,
-          "startingLine": 305
+          "startingLine": 345
         }
       },
       {
@@ -311,7 +407,7 @@
         "key": "Are you sure you want to delete this group? This action cannot be undone and will remove all members and events.",
         "location": {
           "startingColumn": 18,
-          "startingLine": 311
+          "startingLine": 351
         }
       },
       {
@@ -319,7 +415,7 @@
         "key": "Admin",
         "location": {
           "startingColumn": 22,
-          "startingLine": 352
+          "startingLine": 395
         }
       },
       {
@@ -327,7 +423,31 @@
         "key": "%@ %@",
         "location": {
           "startingColumn": 22,
-          "startingLine": 339
+          "startingLine": 381
+        }
+      },
+      {
+        "comment": "",
+        "key": "Make Admin",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 408
+        }
+      },
+      {
+        "comment": "",
+        "key": "Remove Admin",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 414
+        }
+      },
+      {
+        "comment": "",
+        "key": "Remove from Group",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 420
         }
       },
       {
@@ -335,7 +455,71 @@
         "key": "Invited %@",
         "location": {
           "startingColumn": 22,
-          "startingLine": 395
+          "startingLine": 457
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Member",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 494
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 487
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 500
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add member to \"%@\"",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 515
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter the email address of the user you want to add to this group.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 518
+        }
+      },
+      {
+        "comment": "",
+        "key": "Email Address",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 524
+        }
+      },
+      {
+        "comment": "",
+        "key": "user@example.com",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 528
+        }
+      },
+      {
+        "comment": "",
+        "key": "Adding member...",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 539
         }
       }
     ]

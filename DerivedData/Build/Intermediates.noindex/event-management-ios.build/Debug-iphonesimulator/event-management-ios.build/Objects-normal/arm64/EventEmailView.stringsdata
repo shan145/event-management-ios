@@ -1,0 +1,96 @@
+{
+  "source": "/Users/samuelhan/Desktop/src/us-eventify/event-management-ios/event-management-ios/Views/Events/EventEmailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Success",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 42
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 36
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 43
+        }
+      },
+      {
+        "comment": "",
+        "key": "Email Attendees",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 61
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "Send",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Event Information",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld confirmed attendees will receive this email",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "Email Content",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 138
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sending email...",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 158
+        }
+      }
+    ]
+  },
+  "version": 1
+}

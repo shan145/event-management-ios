@@ -3,65 +3,109 @@ import SwiftUI
 
 @MainActor
 class PreferencesSettingsViewModel: ObservableObject {
-    // Notification Preferences
-    @Published var eventReminders = true
-    @Published var groupUpdates = true
-    @Published var emailNotifications = true
-    @Published var pushNotifications = true
+    // Email Notification Preferences
+    @Published var emailNotificationsEnabled = true
     
-    // Privacy Settings
-    @Published var showProfileToOthers = true
-    @Published var allowEventInvites = true
-    @Published var showEmailToGroupMembers = false
+    // Push Notification Preferences
+    @Published var pushEventInvites = true
+    @Published var pushEventReminders = true
+    @Published var pushEventUpdates = true
+    @Published var pushEventCancellations = true
+    @Published var pushGroupInvites = true
+    @Published var pushGroupUpdates = true
+    @Published var pushSystemAnnouncements = true
     
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showSuccess = false
+    @Published var hasLoaded = false
     
     private let apiService = APIService.shared
     
-    func loadPreferences() {
-        // Load preferences from UserDefaults or API
-        // For now, we'll use default values
-        // TODO: Implement actual preference loading from backend
+    func loadPreferences() async {
+        if hasLoaded { return }
+        await refreshPreferences()
+        hasLoaded = true
     }
     
-    func savePreferences() async {
+    func refreshPreferences() async {
         isLoading = true
         errorMessage = nil
         
         do {
-            let preferences = UserPreferences(
-                eventReminders: eventReminders,
-                groupUpdates: groupUpdates,
-                emailNotifications: emailNotifications,
-                pushNotifications: pushNotifications,
-                showProfileToOthers: showProfileToOthers,
-                allowEventInvites: allowEventInvites,
-                showEmailToGroupMembers: showEmailToGroupMembers
-            )
-            
-            // TODO: Implement preferences endpoint on server
-            // let response = try await apiService.updatePreferences(preferences: preferences)
-            
-            showSuccess = true
-            errorMessage = "Preferences update not yet implemented on server"
+            let response = try await apiService.getNotificationPreferences()
+            apply(preferences: response.data.preferences)
         } catch {
             errorMessage = error.localizedDescription
         }
         
         isLoading = false
     }
-}
-
-// MARK: - User Preferences Model
-
-struct UserPreferences: Codable {
-    let eventReminders: Bool
-    let groupUpdates: Bool
-    let emailNotifications: Bool
-    let pushNotifications: Bool
-    let showProfileToOthers: Bool
-    let allowEventInvites: Bool
-    let showEmailToGroupMembers: Bool
+    
+    func savePreferences() async {
+        isLoading = true
+        errorMessage = nil
+        showSuccess = false
+        
+        let pushPreferences = NotificationPreferenceTypesDTO(
+            eventInvites: pushEventInvites,
+            eventReminders: pushEventReminders,
+            eventUpdates: pushEventUpdates,
+            eventCancellations: pushEventCancellations,
+            groupInvites: pushGroupInvites,
+            groupUpdates: pushGroupUpdates,
+            systemAnnouncements: pushSystemAnnouncements
+        )
+        
+        let request = UpdateNotificationPreferencesRequest(
+            preferences: NotificationPreferencesDTO(
+                email: emailNotificationsEnabled ? nil : NotificationPreferenceTypesDTO(
+                    eventInvites: false,
+                    eventReminders: false,
+                    eventUpdates: false,
+                    eventCancellations: false,
+                    groupInvites: false,
+                    groupUpdates: false,
+                    systemAnnouncements: false
+                ),
+                push: pushPreferences,
+                reminderTiming: nil
+            )
+        )
+        
+        do {
+            _ = try await apiService.updateNotificationPreferences(preferences: request)
+            showSuccess = true
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        
+        isLoading = false
+    }
+    
+    private func apply(preferences: NotificationPreferencesDTO) {
+        // Email
+        if let email = preferences.email {
+            emailNotificationsEnabled = ![
+                email.eventInvites,
+                email.eventReminders,
+                email.eventUpdates,
+                email.eventCancellations,
+                email.groupInvites,
+                email.groupUpdates,
+                email.systemAnnouncements
+            ].contains(false)
+        } else {
+            emailNotificationsEnabled = true
+        }
+        
+        // Push
+        pushEventInvites = preferences.push.eventInvites ?? true
+        pushEventReminders = preferences.push.eventReminders ?? true
+        pushEventUpdates = preferences.push.eventUpdates ?? true
+        pushEventCancellations = preferences.push.eventCancellations ?? true
+        pushGroupInvites = preferences.push.groupInvites ?? true
+        pushGroupUpdates = preferences.push.groupUpdates ?? true
+        pushSystemAnnouncements = preferences.push.systemAnnouncements ?? true
+    }
 }

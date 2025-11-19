@@ -32,6 +32,9 @@ class AuthManager: ObservableObject {
             let response = try await apiService.getCurrentUser()
             currentUser = response.data.user
             isAuthenticated = true
+            
+            // Register device token if user is already authenticated
+            NotificationService.shared.registerPendingDeviceToken()
         } catch {
             await logout()
         }
@@ -48,6 +51,10 @@ class AuthManager: ObservableObject {
             keychain.saveToken(response.data.token)
             isAuthenticated = true
             isLoading = false
+            
+            // Register device token after successful login
+            NotificationService.shared.registerPendingDeviceToken()
+            
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -67,6 +74,10 @@ class AuthManager: ObservableObject {
             keychain.saveToken(response.data.token)
             isAuthenticated = true
             isLoading = false
+            
+            // Register device token after successful signup
+            NotificationService.shared.registerPendingDeviceToken()
+            
             return true
         } catch {
             errorMessage = error.localizedDescription

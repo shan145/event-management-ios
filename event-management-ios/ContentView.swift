@@ -83,18 +83,18 @@ struct MainTabView: View {
     
     var body: some View {
         TabView {
-            GroupsView()
-                .environmentObject(dashboardViewModel)
-                .tabItem {
-                    Image(systemName: "person.3")
-                    Text("Groups")
-                }
-            
             EventsView()
                 .environmentObject(dashboardViewModel)
                 .tabItem {
                     Image(systemName: "calendar")
                     Text("Events")
+                }
+            
+            GroupsView()
+                .environmentObject(dashboardViewModel)
+                .tabItem {
+                    Image(systemName: "person.3")
+                    Text("Groups")
                 }
             
             NotificationsView()

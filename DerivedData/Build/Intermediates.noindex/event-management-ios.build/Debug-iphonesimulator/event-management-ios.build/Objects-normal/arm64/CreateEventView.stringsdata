@@ -7,7 +7,7 @@
         "key": "Error",
         "location": {
           "startingColumn": 16,
-          "startingLine": 62
+          "startingLine": 96
         }
       },
       {
@@ -15,15 +15,7 @@
         "key": "OK",
         "location": {
           "startingColumn": 20,
-          "startingLine": 63
-        }
-      },
-      {
-        "comment": "",
-        "key": "Create Event",
-        "location": {
-          "startingColumn": 22,
-          "startingLine": 95
+          "startingLine": 97
         }
       },
       {
@@ -31,7 +23,23 @@
         "key": "Cancel",
         "location": {
           "startingColumn": 24,
-          "startingLine": 88
+          "startingLine": 122
+        }
+      },
+      {
+        "comment": "",
+        "key": "Duplicate Event",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 129
+        }
+      },
+      {
+        "comment": "",
+        "key": "Create Event",
+        "location": {
+          "startingColumn": 68,
+          "startingLine": 129
         }
       },
       {
@@ -39,7 +47,7 @@
         "key": "Create",
         "location": {
           "startingColumn": 24,
-          "startingLine": 101
+          "startingLine": 135
         }
       },
       {
@@ -47,7 +55,7 @@
         "key": "Event Details",
         "location": {
           "startingColumn": 18,
-          "startingLine": 122
+          "startingLine": 157
         }
       },
       {
@@ -55,7 +63,7 @@
         "key": "Group",
         "location": {
           "startingColumn": 18,
-          "startingLine": 140
+          "startingLine": 175
         }
       },
       {
@@ -63,7 +71,7 @@
         "key": "Select Group",
         "location": {
           "startingColumn": 24,
-          "startingLine": 162
+          "startingLine": 197
         }
       },
       {
@@ -71,7 +79,7 @@
         "key": "No groups available",
         "location": {
           "startingColumn": 30,
-          "startingLine": 147
+          "startingLine": 182
         }
       },
       {
@@ -79,7 +87,7 @@
         "key": "You need to be a group admin to create events",
         "location": {
           "startingColumn": 30,
-          "startingLine": 151
+          "startingLine": 186
         }
       },
       {
@@ -87,7 +95,7 @@
         "key": "Select a group",
         "location": {
           "startingColumn": 26,
-          "startingLine": 163
+          "startingLine": 198
         }
       },
       {
@@ -95,7 +103,7 @@
         "key": "Group",
         "location": {
           "startingColumn": 18,
-          "startingLine": 182
+          "startingLine": 217
         }
       },
       {
@@ -103,7 +111,7 @@
         "key": "Event will be created for this group",
         "location": {
           "startingColumn": 30,
-          "startingLine": 198
+          "startingLine": 233
         }
       },
       {
@@ -111,7 +119,7 @@
         "key": "Date & Time",
         "location": {
           "startingColumn": 18,
-          "startingLine": 218
+          "startingLine": 253
         }
       },
       {
@@ -119,7 +127,7 @@
         "key": "Date",
         "location": {
           "startingColumn": 26,
-          "startingLine": 224
+          "startingLine": 259
         }
       },
       {
@@ -127,23 +135,39 @@
         "key": "Time",
         "location": {
           "startingColumn": 26,
-          "startingLine": 244
+          "startingLine": 279
+        }
+      },
+      {
+        "comment": "",
+        "key": "💡 Tip: Include city/state for better accuracy",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 335
         }
       },
       {
         "comment": "",
         "key": "Location",
         "location": {
-          "startingColumn": 18,
-          "startingLine": 272
+          "startingColumn": 22,
+          "startingLine": 308
         }
       },
       {
         "comment": "",
-        "key": "Capacity",
+        "key": "Search",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 321
+        }
+      },
+      {
+        "comment": "",
+        "key": "Capacity & Guests",
         "location": {
           "startingColumn": 18,
-          "startingLine": 290
+          "startingLine": 347
         }
       },
       {
@@ -151,7 +175,7 @@
         "key": "Unlimited Capacity",
         "location": {
           "startingColumn": 24,
-          "startingLine": 295
+          "startingLine": 352
         }
       },
       {
@@ -159,7 +183,31 @@
         "key": "Description",
         "location": {
           "startingColumn": 18,
-          "startingLine": 316
+          "startingLine": 379
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notifications",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 397
+        }
+      },
+      {
+        "comment": "",
+        "key": "All group members will receive an email notification about this new event.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 409
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notify Members via Email?",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 403
         }
       },
       {
@@ -167,7 +215,7 @@
         "key": "Done",
         "location": {
           "startingColumn": 28,
-          "startingLine": 367
+          "startingLine": 457
         }
       }
     ]
