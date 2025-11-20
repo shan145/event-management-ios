@@ -4,6 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var selectedTab = 0
     @State private var showingLogoutAlert = false
+    @State private var showingDeleteSheet = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -59,6 +60,12 @@ struct SettingsView: View {
                 PasswordSettingsView()
             }
             
+            DeleteAccountCard {
+                showingDeleteSheet = true
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.md)
+            
             Spacer()
             
             // Action Buttons
@@ -102,6 +109,10 @@ struct SettingsView: View {
             }
         } message: {
             Text("Are you sure you want to logout?")
+        }
+        .sheet(isPresented: $showingDeleteSheet) {
+            DeleteAccountSheet()
+                .environmentObject(authManager)
         }
     }
 }
@@ -284,6 +295,40 @@ struct UniformButtonStyle: ButtonStyle {
             .appShadow(configuration.isPressed ? AppShadows.buttonPressed : AppShadows.button)
             .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+private struct DeleteAccountCard: View {
+    let onDeleteTap: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            HStack(alignment: .top, spacing: AppSpacing.sm) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.red)
+                    .font(.system(size: 20))
+                
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text("Delete your account")
+                        .font(AppTypography.h5)
+                        .foregroundColor(Color.appTextPrimary)
+                        .fontWeight(.bold)
+                    
+                    Text("Permanently remove your profile, groups, and event participation. This cannot be undone.")
+                        .font(AppTypography.body2)
+                        .foregroundColor(Color.appTextSecondary)
+                }
+            }
+            
+            Button("Delete Account") {
+                onDeleteTap()
+            }
+            .buttonStyle(UniformButtonStyle(isDestructive: true))
+        }
+        .padding(AppSpacing.lg)
+        .background(Color.appSurface)
+        .cornerRadius(AppCornerRadius.large)
+        .appShadow(AppShadows.small)
     }
 }
 

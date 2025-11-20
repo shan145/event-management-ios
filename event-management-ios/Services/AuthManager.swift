@@ -113,6 +113,22 @@ class AuthManager: ObservableObject {
         keychain.deleteToken()
     }
     
+    func deleteAccount(currentPassword: String) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            _ = try await apiService.deleteAccount(currentPassword: currentPassword)
+            await logout()
+            isLoading = false
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+            return false
+        }
+    }
+    
     func clearError() {
         errorMessage = nil
     }

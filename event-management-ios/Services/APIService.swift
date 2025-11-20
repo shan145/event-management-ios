@@ -93,6 +93,10 @@ struct ChangePasswordRequest: Codable {
     let confirmPassword: String
 }
 
+struct DeleteAccountRequest: Codable {
+    let currentPassword: String
+}
+
 struct ForgotPasswordRequest: Codable {
     let email: String
 }
@@ -328,6 +332,14 @@ class APIService: ObservableObject {
     func deleteUser(id: String) async throws -> SuccessResponse {
         let url = URL(string: "\(baseURL)/users/\(id)")!
         let request = createRequest(url: url, method: "DELETE")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
+    
+    func deleteAccount(currentPassword: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/users/me")!
+        let requestBody = DeleteAccountRequest(currentPassword: currentPassword)
+        let body = try JSONEncoder().encode(requestBody)
+        let request = createRequest(url: url, method: "DELETE", body: body)
         return try await performRequest(request, responseType: SuccessResponse.self)
     }
     
