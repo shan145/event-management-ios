@@ -17,15 +17,17 @@ class JoinGroupViewModel: ObservableObject {
     func joinGroup() async {
         guard isFormValid else { return }
         
+        guard let userId = AuthManager.shared.currentUser?.id else {
+            errorMessage = "You must be logged in to join a group"
+            showError = true
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
         showError = false
         
         do {
-            // TODO: We need a userId for joining groups. For now, we'll use a placeholder
-            // In a real app, you'd get the current user's ID from AuthManager
-            let userId = "placeholder-user-id"
-            
             let response = try await apiService.joinGroup(
                 token: groupCode.trimmingCharacters(in: .whitespacesAndNewlines),
                 userId: userId

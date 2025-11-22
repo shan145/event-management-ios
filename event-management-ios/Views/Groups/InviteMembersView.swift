@@ -8,7 +8,7 @@ struct InviteMembersView: View {
     
     private var inviteURL: String {
         // In a real app, this would be your app's deep link or web URL
-        "https://eventify.app/join/\(group.inviteToken ?? "")"
+        "https://us-eventify.com/join/\(group.inviteToken ?? "")"
     }
     
     var body: some View {

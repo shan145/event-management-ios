@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
+    @StateObject private var navigationCoordinator = NavigationCoordinator.shared
     @State private var showErrorAlert = false
     
     var body: some View {
@@ -17,6 +18,12 @@ struct ContentView: View {
                 LoadingView()
             } else if authManager.isAuthenticated {
                 MainTabView()
+                    .sheet(isPresented: $navigationCoordinator.shouldShowInviteView) {
+                        if let inviteToken = navigationCoordinator.pendingInviteToken {
+                            InviteLinkView(inviteToken: inviteToken)
+                                .environmentObject(authManager)
+                        }
+                    }
             } else {
                 AuthenticationView()
             }
