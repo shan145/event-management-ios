@@ -6,6 +6,8 @@ struct CreateEventView: View {
     @StateObject private var viewModel = CreateEventViewModel()
     @State private var showDatePicker = false
     @State private var showTimePicker = false
+    @State private var showEndDatePicker = false
+    @State private var showEndTimePicker = false
     
     let preSelectedGroup: Group?
     let eventToDuplicate: Event?
@@ -109,8 +111,28 @@ struct CreateEventView: View {
         }
         .sheet(isPresented: $showTimePicker) {
             DatePickerSheet(
-                title: "Select Time",
+                title: "Select Start Time",
                 date: $viewModel.selectedTime,
+                isDate: false
+            )
+        }
+        .sheet(isPresented: $showEndDatePicker) {
+            DatePickerSheet(
+                title: "Select End Date",
+                date: Binding(
+                    get: { viewModel.selectedEndDate ?? Date() },
+                    set: { viewModel.selectedEndDate = $0 }
+                ),
+                isDate: true
+            )
+        }
+        .sheet(isPresented: $showEndTimePicker) {
+            DatePickerSheet(
+                title: "Select End Time",
+                date: Binding(
+                    get: { viewModel.selectedEndTime ?? Date() },
+                    set: { viewModel.selectedEndTime = $0 }
+                ),
                 isDate: false
             )
         }
@@ -279,7 +301,7 @@ struct CreateEventView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Time")
+                    Text("Start Time")
                         .font(AppTypography.body2)
                         .foregroundColor(Color.appTextSecondary)
                     
@@ -296,6 +318,55 @@ struct CreateEventView: View {
                         .cornerRadius(AppCornerRadius.medium)
                     }
                     .buttonStyle(PlainButtonStyle())
+                }
+            }
+            
+            // End Date & Time (Optional)
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text("End Date & Time (Optional)")
+                    .font(AppTypography.body2)
+                    .foregroundColor(Color.appTextSecondary)
+                
+                HStack(spacing: AppSpacing.md) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Button(action: { showEndDatePicker = true }) {
+                            HStack {
+                                Text(viewModel.selectedEndDate != nil ? {
+                                    let formatter = DateFormatter()
+                                    formatter.dateStyle = .medium
+                                    return formatter.string(from: viewModel.selectedEndDate!)
+                                }() : "Select End Date")
+                                    .foregroundColor(Color.appTextPrimary)
+                                Spacer()
+                                Image(systemName: "calendar")
+                                    .foregroundColor(Color.appTextSecondary)
+                            }
+                            .padding(AppSpacing.md)
+                            .background(Color.grey50)
+                            .cornerRadius(AppCornerRadius.medium)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Button(action: { showEndTimePicker = true }) {
+                            HStack {
+                                Text(viewModel.selectedEndTime != nil ? {
+                                    let formatter = DateFormatter()
+                                    formatter.timeStyle = .short
+                                    return formatter.string(from: viewModel.selectedEndTime!)
+                                }() : "Select End Time")
+                                    .foregroundColor(Color.appTextPrimary)
+                                Spacer()
+                                Image(systemName: "clock")
+                                    .foregroundColor(Color.appTextSecondary)
+                            }
+                            .padding(AppSpacing.md)
+                            .background(Color.grey50)
+                            .cornerRadius(AppCornerRadius.medium)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
                 }
             }
         }

@@ -38,6 +38,7 @@ struct ExpandableText: View {
     let font: Font
     let color: Color
     let title: String
+    let alwaysShowModalOnTap: Bool
     
     @State private var isExpanded = false
     @State private var showingModal = false
@@ -47,13 +48,15 @@ struct ExpandableText: View {
         lineLimit: Int = 2,
         font: Font = .system(size: 15, weight: .regular, design: .rounded),
         color: Color = Color.grey600,
-        title: String = "Full Text"
+        title: String = "Full Text",
+        alwaysShowModalOnTap: Bool = false
     ) {
         self.text = text
         self.lineLimit = lineLimit
         self.font = font
         self.color = color
         self.title = title
+        self.alwaysShowModalOnTap = alwaysShowModalOnTap
     }
     
     var body: some View {
@@ -64,7 +67,7 @@ struct ExpandableText: View {
                 .lineLimit(isExpanded ? nil : lineLimit)
                 .multilineTextAlignment(.leading)
                 .onTapGesture {
-                    if isTextTruncated() {
+                    if alwaysShowModalOnTap || isTextTruncated() {
                         showingModal = true
                     }
                 }

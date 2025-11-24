@@ -170,6 +170,8 @@ struct Event: Codable, Identifiable, Equatable {
     let location: EventLocation?
     let date: String
     let time: String
+    let endDate: String?
+    let endTime: String?
     let maxAttendees: Int?
     let guests: Int
     let groupId: EventGroup
@@ -199,6 +201,18 @@ struct Event: Codable, Identifiable, Equatable {
         
         date = try container.decode(String.self, forKey: .date)
         time = try container.decode(String.self, forKey: .time)
+        
+        // Handle endDate as either String or Date (ISO timestamp)
+        if let endDateString = try? container.decode(String.self, forKey: .endDate) {
+            endDate = endDateString
+        } else if let endDateDate = try? container.decode(Date.self, forKey: .endDate) {
+            let formatter = ISO8601DateFormatter()
+            endDate = formatter.string(from: endDateDate)
+        } else {
+            endDate = nil
+        }
+        
+        endTime = try container.decodeIfPresent(String.self, forKey: .endTime)
         maxAttendees = try container.decodeIfPresent(Int.self, forKey: .maxAttendees)
         guests = try container.decode(Int.self, forKey: .guests)
         goingList = try container.decodeIfPresent([User].self, forKey: .goingList)
@@ -274,6 +288,8 @@ struct Event: Codable, Identifiable, Equatable {
         outputFormatter.locale = Locale(identifier: "en_US")
         outputFormatter.timeZone = TimeZone(identifier: "America/New_York")
         
+        var startDateTimeString: String = ""
+        
         // First, try to parse the date field as an ISO timestamp (which seems to be the case)
         let isoFormatters = [
             "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
@@ -290,60 +306,164 @@ struct Event: Codable, Identifiable, Equatable {
             inputFormatter.timeZone = TimeZone(identifier: "UTC")
             
             if let parsedDate = inputFormatter.date(from: date) {
-                return outputFormatter.string(from: parsedDate) + " ET"
+                startDateTimeString = outputFormatter.string(from: parsedDate) + " ET"
+                break
             }
         }
         
         // If the date field is not ISO, try combining date and time
-        let dateTime = "\(date) \(time)"
-        let combinedFormatters = [
-            "yyyy-MM-dd HH:mm",
-            "yyyy-MM-dd HH:mm:ss"
-        ]
-        
-        for format in combinedFormatters {
-            let inputFormatter = DateFormatter()
-            inputFormatter.dateFormat = format
-            inputFormatter.timeZone = TimeZone(identifier: "UTC")
+        if startDateTimeString.isEmpty {
+            let dateTime = "\(date) \(time)"
+            let combinedFormatters = [
+                "yyyy-MM-dd HH:mm",
+                "yyyy-MM-dd HH:mm:ss"
+            ]
             
-            if let parsedDate = inputFormatter.date(from: dateTime) {
-                return outputFormatter.string(from: parsedDate) + " ET"
+            for format in combinedFormatters {
+                let inputFormatter = DateFormatter()
+                inputFormatter.dateFormat = format
+                inputFormatter.timeZone = TimeZone(identifier: "UTC")
+                
+                if let parsedDate = inputFormatter.date(from: dateTime) {
+                    startDateTimeString = outputFormatter.string(from: parsedDate) + " ET"
+                    break
+                }
             }
         }
         
         // Try parsing date and time separately as a fallback
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm"
-        
-        if let parsedDate = dateFormatter.date(from: date),
-           let parsedTime = timeFormatter.date(from: time) {
+        if startDateTimeString.isEmpty {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
             
-            let calendar = Calendar.current
-            let dateComponents = calendar.dateComponents([.year, .month, .day], from: parsedDate)
-            let timeComponents = calendar.dateComponents([.hour, .minute], from: parsedTime)
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "HH:mm"
             
-            var combinedComponents = DateComponents()
-            combinedComponents.year = dateComponents.year
-            combinedComponents.month = dateComponents.month
-            combinedComponents.day = dateComponents.day
-            combinedComponents.hour = timeComponents.hour
-            combinedComponents.minute = timeComponents.minute
-            
-            if calendar.date(from: combinedComponents) != nil {
-                // Assume the original time is in UTC and convert to ET
-                var utcCalendar = Calendar.current
-                utcCalendar.timeZone = TimeZone(identifier: "UTC")!
-                if let utcDate = utcCalendar.date(from: combinedComponents) {
-                    return outputFormatter.string(from: utcDate) + " ET"
+            if let parsedDate = dateFormatter.date(from: date),
+               let parsedTime = timeFormatter.date(from: time) {
+                
+                let calendar = Calendar.current
+                let dateComponents = calendar.dateComponents([.year, .month, .day], from: parsedDate)
+                let timeComponents = calendar.dateComponents([.hour, .minute], from: parsedTime)
+                
+                var combinedComponents = DateComponents()
+                combinedComponents.year = dateComponents.year
+                combinedComponents.month = dateComponents.month
+                combinedComponents.day = dateComponents.day
+                combinedComponents.hour = timeComponents.hour
+                combinedComponents.minute = timeComponents.minute
+                
+                if calendar.date(from: combinedComponents) != nil {
+                    // Assume the original time is in UTC and convert to ET
+                    var utcCalendar = Calendar.current
+                    utcCalendar.timeZone = TimeZone(identifier: "UTC")!
+                    if let utcDate = utcCalendar.date(from: combinedComponents) {
+                        startDateTimeString = outputFormatter.string(from: utcDate) + " ET"
+                    }
                 }
             }
         }
         
         // Final fallback
-        return "\(formattedDate) \(formattedTime) ET"
+        if startDateTimeString.isEmpty {
+            startDateTimeString = "\(formattedDate) \(formattedTime) ET"
+        }
+        
+        // Add end time if available
+        if let endDateStr = endDate {
+            var endDateTimeString: String = ""
+            
+            // Debug: Print to see what we're receiving
+            print("🔍 formattedDateTime - endDate: \(endDateStr), endTime: \(endTime ?? "nil")")
+            
+            // First, try to parse endDate as an ISO timestamp (like the start date)
+            // If endDate is an ISO timestamp, it already contains the time, so use it directly
+            let isoFormatters = [
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd'T'HH:mm:ssZ",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
+                "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+            ]
+            
+            var parsedEndDate: Date? = nil
+            for format in isoFormatters {
+                let inputFormatter = DateFormatter()
+                inputFormatter.dateFormat = format
+                inputFormatter.timeZone = TimeZone(identifier: "UTC")
+                
+                if let parsed = inputFormatter.date(from: endDateStr) {
+                    parsedEndDate = parsed
+                    endDateTimeString = outputFormatter.string(from: parsed) + " ET"
+                    print("✅ Parsed endDate as ISO timestamp: \(endDateTimeString)")
+                    break
+                }
+            }
+            
+            // If endDate is not ISO and we have endTime, try combining them
+            if endDateTimeString.isEmpty, let endTimeStr = endTime {
+                let endDateTime = "\(endDateStr) \(endTimeStr)"
+                let combinedFormatters = [
+                    "yyyy-MM-dd HH:mm",
+                    "yyyy-MM-dd HH:mm:ss"
+                ]
+                
+                for format in combinedFormatters {
+                    let inputFormatter = DateFormatter()
+                    inputFormatter.dateFormat = format
+                    inputFormatter.timeZone = TimeZone(identifier: "UTC")
+                    
+                    if let parsed = inputFormatter.date(from: endDateTime) {
+                        parsedEndDate = parsed
+                        endDateTimeString = outputFormatter.string(from: parsed) + " ET"
+                        break
+                    }
+                }
+            }
+            
+            // Try parsing endDate and endTime separately as a fallback
+            if endDateTimeString.isEmpty, let endTimeStr = endTime {
+                let endDateFormatter = DateFormatter()
+                endDateFormatter.dateFormat = "yyyy-MM-dd"
+                
+                let endTimeFormatter = DateFormatter()
+                endTimeFormatter.dateFormat = "HH:mm"
+                
+                if let parsedDate = endDateFormatter.date(from: endDateStr),
+                   let parsedTime = endTimeFormatter.date(from: endTimeStr) {
+                    let calendar = Calendar.current
+                    let dateComponents = calendar.dateComponents([.year, .month, .day], from: parsedDate)
+                    let timeComponents = calendar.dateComponents([.hour, .minute], from: parsedTime)
+                    
+                    var combinedComponents = DateComponents()
+                    combinedComponents.year = dateComponents.year
+                    combinedComponents.month = dateComponents.month
+                    combinedComponents.day = dateComponents.day
+                    combinedComponents.hour = timeComponents.hour
+                    combinedComponents.minute = timeComponents.minute
+                    combinedComponents.timeZone = TimeZone(identifier: "America/New_York")
+                    
+                    if let combined = calendar.date(from: combinedComponents) {
+                        parsedEndDate = combined
+                        endDateTimeString = outputFormatter.string(from: combined) + " ET"
+                    }
+                }
+            }
+            
+            // Append end date/time if we successfully parsed it
+            if !endDateTimeString.isEmpty {
+                // Remove the trailing " ET" from endDateTimeString since we'll add it at the end
+                let cleanEndString = endDateTimeString.replacingOccurrences(of: " ET", with: "")
+                startDateTimeString += " -\n\(cleanEndString) ET"
+                print("✅ Added end date/time to formatted string: \(startDateTimeString)")
+            } else {
+                print("⚠️ Failed to parse end date/time - endDate: \(endDateStr), endTime: \(endTime ?? "nil")")
+            }
+        } else {
+            print("ℹ️ No endDate provided for event")
+        }
+        
+        return startDateTimeString
     }
     
     var isUnlimited: Bool {
@@ -414,6 +534,8 @@ struct Event: Codable, Identifiable, Equatable {
         location: EventLocation(name: "Sample Location", url: nil),
         date: "2024-01-15",
         time: "14:00",
+        endDate: "2024-01-15",
+        endTime: "16:00",
         maxAttendees: 50,
         guests: 0,
         groupId: EventGroup.id("sample-group-id"),
@@ -426,13 +548,15 @@ struct Event: Codable, Identifiable, Equatable {
     )
     
     // Custom initializer for creating Event instances
-    init(id: String, title: String, description: String?, location: EventLocation?, date: String, time: String, maxAttendees: Int?, guests: Int, groupId: EventGroup, createdBy: EventCreator, createdAt: String?, updatedAt: String?, goingList: [User]?, waitlist: [User]?, noGoList: [User]?) {
+    init(id: String, title: String, description: String?, location: EventLocation?, date: String, time: String, endDate: String?, endTime: String?, maxAttendees: Int?, guests: Int, groupId: EventGroup, createdBy: EventCreator, createdAt: String?, updatedAt: String?, goingList: [User]?, waitlist: [User]?, noGoList: [User]?) {
         self.id = id
         self.title = title
         self.description = description
         self.location = location
         self.date = date
         self.time = time
+        self.endDate = endDate
+        self.endTime = endTime
         self.maxAttendees = maxAttendees
         self.guests = guests
         self.groupId = groupId
@@ -451,6 +575,8 @@ struct Event: Codable, Identifiable, Equatable {
         case location
         case date
         case time
+        case endDate
+        case endTime
         case maxAttendees
         case guests
         case groupId

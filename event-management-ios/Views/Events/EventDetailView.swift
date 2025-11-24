@@ -125,7 +125,8 @@ struct EventDetailView: View {
                         lineLimit: 3,
                         font: .body,
                         color: .secondary,
-                        title: "Event Description"
+                        title: "Event Description",
+                        alwaysShowModalOnTap: true
                     )
                 }
                 .padding(.horizontal)

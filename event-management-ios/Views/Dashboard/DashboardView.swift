@@ -490,7 +490,8 @@ struct DashboardEventCardView: View {
                             lineLimit: 2,
                             font: .system(size: 15, weight: .regular, design: .rounded),
                             color: Color.grey600,
-                            title: "Event Description"
+                            title: "Event Description",
+                            alwaysShowModalOnTap: true
                         )
                     }
                 }
@@ -506,7 +507,7 @@ struct DashboardEventCardView: View {
             // Event details with modern layout
             VStack(spacing: AppSpacing.md) {
                 // Date and Time
-                HStack(spacing: AppSpacing.sm) {
+                HStack(alignment: .top, spacing: AppSpacing.sm) {
                     Image(systemName: "calendar")
                         .font(.system(size: 18))
                         .foregroundColor(Color.statusAdmin)
@@ -515,6 +516,7 @@ struct DashboardEventCardView: View {
                     Text(event.formattedDateTime)
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundColor(Color.appTextPrimary)
+                        .multilineTextAlignment(.leading)
                     
                     Spacer()
                 }

@@ -97,13 +97,14 @@ struct EventEmailView: View {
                         .foregroundColor(Color.appTextPrimary)
                 }
                 
-                HStack {
+                HStack(alignment: .top) {
                     Image(systemName: "clock")
                         .foregroundColor(Color.grey600)
                         .frame(width: 20)
                     Text(event.formattedDateTime)
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundColor(Color.appTextSecondary)
+                        .multilineTextAlignment(.leading)
                 }
                 
                 if let location = event.location, !location.name.isEmpty {
@@ -230,6 +231,8 @@ class EventEmailViewModel: ObservableObject {
         location: EventLocation(name: "Preview Location", url: nil),
         date: "2025-01-15",
         time: "19:00",
+        endDate: nil,
+        endTime: nil,
         maxAttendees: 20,
         guests: 2,
         groupId: .id("preview-group"),

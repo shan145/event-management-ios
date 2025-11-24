@@ -171,6 +171,8 @@ struct SendEventEmailView: View {
         location: EventLocation(name: "Sample Location", url: nil),
         date: "2025-01-15",
         time: "18:00",
+        endDate: nil,
+        endTime: nil,
         maxAttendees: nil,
         guests: 0,
         groupId: .id("group1"),

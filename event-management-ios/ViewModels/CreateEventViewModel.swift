@@ -7,6 +7,8 @@ class CreateEventViewModel: ObservableObject {
     @Published var location = ""
     @Published var selectedDate = Date()
     @Published var selectedTime = Date()
+    @Published var selectedEndDate: Date? = nil
+    @Published var selectedEndTime: Date? = nil
     @Published var isUnlimitedCapacity = true
     @Published var maxAttendees = ""
     @Published var guests = ""
@@ -81,6 +83,33 @@ class CreateEventViewModel: ObservableObject {
             }
         }
         
+        // Parse end date and time if available
+        if let endDateStr = event.endDate, let endTimeStr = event.endTime {
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            if let eventEndDate = dateFormatter.date(from: endDateStr) {
+                self.selectedEndDate = eventEndDate
+            }
+            
+            dateFormatter.dateFormat = "HH:mm"
+            if let eventEndTime = dateFormatter.date(from: endTimeStr) {
+                let calendar = Calendar.current
+                let endDateComponents = calendar.dateComponents([.year, .month, .day], from: selectedEndDate ?? selectedDate)
+                let endTimeComponents = calendar.dateComponents([.hour, .minute], from: eventEndTime)
+                
+                var combinedEndComponents = DateComponents()
+                combinedEndComponents.year = endDateComponents.year
+                combinedEndComponents.month = endDateComponents.month
+                combinedEndComponents.day = endDateComponents.day
+                combinedEndComponents.hour = endTimeComponents.hour
+                combinedEndComponents.minute = endTimeComponents.minute
+                combinedEndComponents.timeZone = TimeZone(identifier: "America/New_York")
+                
+                if let combinedEndDate = calendar.date(from: combinedEndComponents) {
+                    self.selectedEndTime = combinedEndDate
+                }
+            }
+        }
+        
         // Set capacity settings
         if let maxCapacity = event.maxAttendees, maxCapacity > 0 {
             self.isUnlimitedCapacity = false
@@ -138,6 +167,17 @@ class CreateEventViewModel: ObservableObject {
             timeFormatter.dateFormat = "HH:mm"
             let timeString = timeFormatter.string(from: selectedTime)
             
+            // Format end date and time if provided
+            let endDateString: String?
+            let endTimeString: String?
+            if let endDate = selectedEndDate, let endTime = selectedEndTime {
+                endDateString = dateFormatter.string(from: endDate)
+                endTimeString = timeFormatter.string(from: endTime)
+            } else {
+                endDateString = nil
+                endTimeString = nil
+            }
+            
             // Parse max attendees
             var maxAttendeesInt: Int?
             if !isUnlimitedCapacity && !maxAttendees.isEmpty {
@@ -154,6 +194,8 @@ class CreateEventViewModel: ObservableObject {
                 location: location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : location.trimmingCharacters(in: .whitespacesAndNewlines),
                 date: dateString,
                 time: timeString,
+                endDate: endDateString,
+                endTime: endTimeString,
                 maxAttendees: maxAttendeesInt,
                 guests: guestsInt,
                 notifyGroup: notifyGroupMembers
@@ -205,6 +247,8 @@ class CreateEventViewModel: ObservableObject {
         location = ""
         selectedDate = Date()
         selectedTime = Date()
+        selectedEndDate = nil
+        selectedEndTime = nil
         isUnlimitedCapacity = true
         maxAttendees = ""
         selectedGroupId = ""

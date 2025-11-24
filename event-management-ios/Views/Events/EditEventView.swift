@@ -49,8 +49,28 @@ struct EditEventView: View {
             }
             .sheet(isPresented: $viewModel.showingTimePicker) {
                 DatePickerSheet(
-                    title: "Select Time",
+                    title: "Select Start Time",
                     date: $viewModel.selectedTime,
+                    isDate: false
+                )
+            }
+            .sheet(isPresented: $viewModel.showingDatePicker) {
+                DatePickerSheet(
+                    title: "Select End Date",
+                    date: Binding(
+                        get: { viewModel.selectedEndDate ?? Date() },
+                        set: { viewModel.selectedEndDate = $0 }
+                    ),
+                    isDate: true
+                )
+            }
+            .sheet(isPresented: $viewModel.showingTimePicker) {
+                DatePickerSheet(
+                    title: "Select End Time",
+                    date: Binding(
+                        get: { viewModel.selectedEndTime ?? Date() },
+                        set: { viewModel.selectedEndTime = $0 }
+                    ),
                     isDate: false
                 )
             }
@@ -103,7 +123,7 @@ struct EditEventView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Time")
+                    Text("Start Time")
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
@@ -120,6 +140,49 @@ struct EditEventView: View {
                         .padding()
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
+                    }
+                }
+            }
+            
+            // End Date & Time (Optional)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("End Date & Time (Optional)")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: {
+                            viewModel.showingDatePicker = true
+                        }) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                    .foregroundColor(.blue)
+                                Text(viewModel.endDate.isEmpty ? "Select End Date" : viewModel.endDate)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                            }
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                        }
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: {
+                            viewModel.showingTimePicker = true
+                        }) {
+                            HStack {
+                                Image(systemName: "clock")
+                                    .foregroundColor(.green)
+                                Text(viewModel.endTime.isEmpty ? "Select End Time" : viewModel.endTime)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                            }
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                        }
                     }
                 }
             }

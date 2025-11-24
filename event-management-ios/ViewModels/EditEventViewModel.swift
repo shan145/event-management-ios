@@ -8,6 +8,8 @@ class EditEventViewModel: ObservableObject {
     @Published var location = ""
     @Published var date = ""
     @Published var time = ""
+    @Published var endDate = ""
+    @Published var endTime = ""
     @Published var maxAttendees = ""
     @Published var guests = "0"
     @Published var notifyGroup = false
@@ -26,6 +28,24 @@ class EditEventViewModel: ObservableObject {
     @Published var selectedTime = Date() {
         didSet {
             time = timeFormatter.string(from: selectedTime)
+        }
+    }
+    @Published var selectedEndDate: Date? = nil {
+        didSet {
+            if let endDate = selectedEndDate {
+                self.endDate = dateFormatter.string(from: endDate)
+            } else {
+                self.endDate = ""
+            }
+        }
+    }
+    @Published var selectedEndTime: Date? = nil {
+        didSet {
+            if let endTime = selectedEndTime {
+                self.endTime = timeFormatter.string(from: endTime)
+            } else {
+                self.endTime = ""
+            }
         }
     }
     
@@ -72,6 +92,17 @@ class EditEventViewModel: ObservableObject {
             selectedDate = now
             selectedTime = now
         }
+        
+        // Parse end date and time if available
+        if let endDateStr = event.endDate, let endTimeStr = event.endTime {
+            if let parsedEndDateTime = parseEventDateTime(date: endDateStr, time: endTimeStr) {
+                selectedEndDate = parsedEndDateTime
+                selectedEndTime = parsedEndDateTime
+            }
+        } else {
+            selectedEndDate = nil
+            selectedEndTime = nil
+        }
     }
     
     func updateEvent(eventId: String) async {
@@ -88,6 +119,9 @@ class EditEventViewModel: ObservableObject {
             let maxAttendeesInt = maxAttendees.isEmpty ? nil : Int(maxAttendees)
             let guestsInt = Int(guests) ?? 0
             
+            let endDateString: String? = selectedEndDate != nil ? formatEndDateForAPI() : nil
+            let endTimeString: String? = selectedEndTime != nil ? formatEndTimeForAPI() : nil
+            
             let response = try await apiService.updateEvent(
                 id: eventId,
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -95,6 +129,8 @@ class EditEventViewModel: ObservableObject {
                 location: location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : location.trimmingCharacters(in: .whitespacesAndNewlines),
                 date: formatDateForAPI(),
                 time: formatTimeForAPI(),
+                endDate: endDateString,
+                endTime: endTimeString,
                 maxAttendees: maxAttendeesInt,
                 guests: guestsInt
             )
@@ -164,5 +200,21 @@ class EditEventViewModel: ObservableObject {
         apiTimeFormatter.dateFormat = "HH:mm"
         apiTimeFormatter.timeZone = TimeZone(identifier: "America/New_York")
         return apiTimeFormatter.string(from: selectedTime)
+    }
+    
+    private func formatEndDateForAPI() -> String {
+        guard let endDate = selectedEndDate else { return "" }
+        let apiDateFormatter = DateFormatter()
+        apiDateFormatter.dateFormat = "yyyy-MM-dd"
+        apiDateFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        return apiDateFormatter.string(from: endDate)
+    }
+    
+    private func formatEndTimeForAPI() -> String {
+        guard let endTime = selectedEndTime else { return "" }
+        let apiTimeFormatter = DateFormatter()
+        apiTimeFormatter.dateFormat = "HH:mm"
+        apiTimeFormatter.timeZone = TimeZone(identifier: "America/New_York")
+        return apiTimeFormatter.string(from: endTime)
     }
 }

@@ -54,6 +54,8 @@ struct CreateEventRequest: Codable {
     let locationUrl: String?
     let date: String
     let time: String
+    let endDate: String?
+    let endTime: String?
     let maxAttendees: Int?
     let guests: Int
     let notifyGroup: Bool
@@ -65,6 +67,8 @@ struct UpdateEventRequest: Codable {
     let location: String?
     let date: String
     let time: String
+    let endDate: String?
+    let endTime: String?
     let maxAttendees: Int?
     let guests: Int
 }
@@ -411,7 +415,7 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: EventResponse.self)
     }
     
-    func createEvent(groupId: String, title: String, description: String?, location: String?, date: String, time: String, maxAttendees: Int?, guests: Int = 0, notifyGroup: Bool = false) async throws -> EventResponse {
+    func createEvent(groupId: String, title: String, description: String?, location: String?, date: String, time: String, endDate: String? = nil, endTime: String? = nil, maxAttendees: Int?, guests: Int = 0, notifyGroup: Bool = false) async throws -> EventResponse {
         let url = URL(string: "\(baseURL)/groups/\(groupId)/events")!
         
         let requestBody = CreateEventRequest(
@@ -421,6 +425,8 @@ class APIService: ObservableObject {
             locationUrl: nil,
             date: date,
             time: time,
+            endDate: endDate,
+            endTime: endTime,
             maxAttendees: maxAttendees,
             guests: guests,
             notifyGroup: notifyGroup
@@ -430,7 +436,7 @@ class APIService: ObservableObject {
         return try await performRequest(request, responseType: EventResponse.self)
     }
     
-    func updateEvent(id: String, title: String, description: String?, location: String?, date: String, time: String, maxAttendees: Int?, guests: Int = 0) async throws -> EventResponse {
+    func updateEvent(id: String, title: String, description: String?, location: String?, date: String, time: String, endDate: String? = nil, endTime: String? = nil, maxAttendees: Int?, guests: Int = 0) async throws -> EventResponse {
         let url = URL(string: "\(baseURL)/events/\(id)")!
         let requestBody = UpdateEventRequest(
             title: title,
@@ -438,6 +444,8 @@ class APIService: ObservableObject {
             location: location,
             date: date,
             time: time,
+            endDate: endDate,
+            endTime: endTime,
             maxAttendees: maxAttendees,
             guests: guests
         )
