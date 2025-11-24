@@ -11,7 +11,9 @@ class NavigationCoordinator: ObservableObject {
     private init() {}
     
     func handleDeepLink(_ url: URL) {
-        guard url.host == "us-eventify.com" else { return }
+        guard let host = url.host, host == "us-eventify.com" else {
+            return
+        }
         
         let pathComponents = url.pathComponents
         
