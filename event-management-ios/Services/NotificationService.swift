@@ -20,6 +20,10 @@ class NotificationService: ObservableObject {
     private init() {
         checkAuthorizationStatus()
         setupNotificationCategories()
+        // Initialize badge to 0 on startup
+        DispatchQueue.main.async {
+            UIApplication.shared.applicationIconBadgeNumber = 0
+        }
         // fetchNotifications() will be called when needed, not in init
     }
     
@@ -131,7 +135,7 @@ class NotificationService: ObservableObject {
         content.title = "Event Reminder"
         content.body = "Your event '\(event.title)' starts in \(minutesBefore) minutes"
         content.sound = .default
-        content.badge = 1
+        // Don't set badge here - let updateUnreadCount() handle it based on actual unread notifications
         content.userInfo = ["eventId": event.id, "type": "event_reminder"]
         
         let trigger = UNCalendarNotificationTrigger(
@@ -157,7 +161,7 @@ class NotificationService: ObservableObject {
         content.title = "Group Invitation"
         content.body = "\(inviterName) invited you to join '\(groupName)'"
         content.sound = .default
-        content.badge = 1
+        // Don't set badge here - let updateUnreadCount() handle it based on actual unread notifications
         content.userInfo = ["type": "group_invite"]
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
@@ -180,7 +184,7 @@ class NotificationService: ObservableObject {
         content.title = "Event Update"
         content.body = "Your event '\(eventTitle)' has been \(updateType)"
         content.sound = .default
-        content.badge = 1
+        // Don't set badge here - let updateUnreadCount() handle it based on actual unread notifications
         content.userInfo = ["type": "event_update"]
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
@@ -203,7 +207,7 @@ class NotificationService: ObservableObject {
         content.title = "Attendee Update"
         content.body = "\(attendeeName) is now \(status) for '\(eventTitle)'"
         content.sound = .default
-        content.badge = 1
+        // Don't set badge here - let updateUnreadCount() handle it based on actual unread notifications
         content.userInfo = ["type": "attendee_status"]
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
@@ -311,7 +315,13 @@ class NotificationService: ObservableObject {
     // MARK: - Helper Methods
     
     private func updateUnreadCount() {
-        unreadCount = notifications.filter { !$0.isRead }.count
+        let newCount = notifications.filter { !$0.isRead }.count
+        unreadCount = newCount
+        
+        // Update the app icon badge to match the unread count
+        DispatchQueue.main.async {
+            UIApplication.shared.applicationIconBadgeNumber = newCount
+        }
     }
     
     func getNotificationBadgeCount() -> Int {

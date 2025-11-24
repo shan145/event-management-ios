@@ -64,6 +64,13 @@ struct ContentView: View {
                 } else {
                     print("📱 ContentView: No pending invite token found")
                 }
+                
+                // Refresh notifications and update badge when app becomes active
+                if authManager.isAuthenticated {
+                    Task {
+                        await NotificationService.shared.fetchNotifications()
+                    }
+                }
             }
         }
         .onOpenURL { url in
@@ -166,9 +173,10 @@ struct MainTabView: View {
             // Start real-time updates when the app becomes active
             notificationService.startRealTimeUpdates()
             
-            // Load initial notifications
+            // Load initial notifications and update badge
             Task {
                 await notificationService.fetchNotifications()
+                // Badge will be updated automatically by updateUnreadCount()
             }
         }
         .onDisappear {
