@@ -7,6 +7,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:us-eventify.com</string>
+		<string>applinks:www.us-eventify.com</string>
 	</array>
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
