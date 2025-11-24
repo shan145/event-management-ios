@@ -18,6 +18,12 @@ struct EventableApp: App {
             ContentView()
                 .environmentObject(authManager)
                 .preferredColorScheme(.light) // Force light mode to match web app
+                .onOpenURL { url in
+                    print("🔗 EventableApp: onOpenURL called with: \(url.absoluteString)")
+                    Task { @MainActor in
+                        NavigationCoordinator.shared.handleDeepLink(url)
+                    }
+                }
         }
     }
 }
@@ -40,10 +46,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     }
     
     func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
-        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
-              let url = userActivity.webpageURL else {
+        print("🔗 AppDelegate: Received userActivity with type: \(userActivity.activityType)")
+        
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb else {
+            print("❌ AppDelegate: Activity type is not NSUserActivityTypeBrowsingWeb")
             return false
         }
+        
+        guard let url = userActivity.webpageURL else {
+            print("❌ AppDelegate: No webpageURL found")
+            return false
+        }
+        
+        print("🔗 AppDelegate: Processing universal link: \(url.absoluteString)")
         
         Task { @MainActor in
             NavigationCoordinator.shared.handleDeepLink(url)

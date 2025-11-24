@@ -183,6 +183,16 @@ struct GroupInviteData: Codable {
     let group: Group
 }
 
+struct GroupPreviewResponse: Codable {
+    let success: Bool
+    let message: String?
+    let data: GroupPreviewData
+}
+
+struct GroupPreviewData: Codable {
+    let group: Group
+}
+
 struct JoinGroupResponse: Codable {
     let success: Bool
     let message: String?
@@ -191,5 +201,5 @@ struct JoinGroupResponse: Codable {
 
 struct JoinGroupData: Codable {
     let group: Group
-    let user: User
+    let user: User?
 }

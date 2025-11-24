@@ -9,8 +9,9 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
-    @StateObject private var navigationCoordinator = NavigationCoordinator.shared
+    @ObservedObject private var navigationCoordinator = NavigationCoordinator.shared
     @State private var showErrorAlert = false
+    @Environment(\.scenePhase) private var scenePhase
     
     var body: some View {
         ZStack {
@@ -18,14 +19,57 @@ struct ContentView: View {
                 LoadingView()
             } else if authManager.isAuthenticated {
                 MainTabView()
-                    .sheet(isPresented: $navigationCoordinator.shouldShowInviteView) {
-                        if let inviteToken = navigationCoordinator.pendingInviteToken {
-                            InviteLinkView(inviteToken: inviteToken)
-                                .environmentObject(authManager)
-                        }
-                    }
             } else {
                 AuthenticationView()
+            }
+        }
+        .sheet(isPresented: $navigationCoordinator.shouldShowInviteView) {
+            if let inviteToken = navigationCoordinator.pendingInviteToken {
+                InviteLinkView(inviteToken: inviteToken)
+                    .environmentObject(authManager)
+            }
+        }
+        .onAppear {
+            print("📱 ContentView: onAppear - shouldShowInviteView: \(navigationCoordinator.shouldShowInviteView), pendingToken: \(navigationCoordinator.pendingInviteToken ?? "nil")")
+            // If there's a pending invite token but the sheet isn't showing, trigger it
+            if let token = navigationCoordinator.pendingInviteToken, !navigationCoordinator.shouldShowInviteView {
+                print("📱 ContentView: Found pending invite token, triggering sheet")
+                navigationCoordinator.shouldShowInviteView = true
+            }
+        }
+        .onChange(of: navigationCoordinator.shouldShowInviteView) { oldValue, newValue in
+            print("📱 ContentView: shouldShowInviteView changed from \(oldValue) to \(newValue)")
+            if newValue && navigationCoordinator.pendingInviteToken != nil {
+                print("📱 ContentView: Sheet should be showing now")
+            }
+        }
+        .onChange(of: navigationCoordinator.pendingInviteToken) { oldValue, newValue in
+            print("📱 ContentView: pendingInviteToken changed from \(oldValue ?? "nil") to \(newValue ?? "nil")")
+            if let token = newValue, !navigationCoordinator.shouldShowInviteView {
+                print("📱 ContentView: Found new invite token, triggering sheet")
+                navigationCoordinator.shouldShowInviteView = true
+            }
+        }
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            print("📱 ContentView: Scene phase changed from \(oldPhase) to \(newPhase)")
+            if newPhase == .active {
+                print("📱 ContentView: App became active - checking for pending invites")
+                // When app becomes active, check for pending invites
+                if let token = navigationCoordinator.pendingInviteToken {
+                    print("📱 ContentView: Found pending invite token: \(token), shouldShowInviteView: \(navigationCoordinator.shouldShowInviteView)")
+                    if !navigationCoordinator.shouldShowInviteView {
+                        print("📱 ContentView: Triggering sheet for pending invite")
+                        navigationCoordinator.shouldShowInviteView = true
+                    }
+                } else {
+                    print("📱 ContentView: No pending invite token found")
+                }
+            }
+        }
+        .onOpenURL { url in
+            print("🔗 ContentView: onOpenURL called with: \(url.absoluteString)")
+            Task { @MainActor in
+                NavigationCoordinator.shared.handleDeepLink(url)
             }
         }
         .onChange(of: authManager.errorMessage) { _, errorMessage in

@@ -514,10 +514,10 @@ class APIService: ObservableObject {
     
     // MARK: - Join Group Endpoints
     
-    func getGroupFromInvite(token: String) async throws -> GroupInviteResponse {
+    func getGroupFromInvite(token: String) async throws -> GroupPreviewResponse {
         let url = URL(string: "\(baseURL)/join/\(token)")!
         let request = createRequest(url: url)
-        return try await performRequest(request, responseType: GroupInviteResponse.self)
+        return try await performRequest(request, responseType: GroupPreviewResponse.self)
     }
     
     func joinGroupWithToken(groupId: String, inviteToken: String) async throws -> JoinGroupResponse {
