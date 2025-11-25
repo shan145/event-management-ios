@@ -54,7 +54,7 @@ struct EditEventView: View {
                     isDate: false
                 )
             }
-            .sheet(isPresented: $viewModel.showingDatePicker) {
+            .sheet(isPresented: $viewModel.showingEndDatePicker) {
                 DatePickerSheet(
                     title: "Select End Date",
                     date: Binding(
@@ -64,7 +64,7 @@ struct EditEventView: View {
                     isDate: true
                 )
             }
-            .sheet(isPresented: $viewModel.showingTimePicker) {
+            .sheet(isPresented: $viewModel.showingEndTimePicker) {
                 DatePickerSheet(
                     title: "Select End Time",
                     date: Binding(
@@ -153,7 +153,7 @@ struct EditEventView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 8) {
                         Button(action: {
-                            viewModel.showingDatePicker = true
+                            viewModel.showingEndDatePicker = true
                         }) {
                             HStack {
                                 Image(systemName: "calendar")
@@ -170,7 +170,7 @@ struct EditEventView: View {
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Button(action: {
-                            viewModel.showingTimePicker = true
+                            viewModel.showingEndTimePicker = true
                         }) {
                             HStack {
                                 Image(systemName: "clock")

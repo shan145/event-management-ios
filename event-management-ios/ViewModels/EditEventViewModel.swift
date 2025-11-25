@@ -16,6 +16,8 @@ class EditEventViewModel: ObservableObject {
     
     @Published var showingDatePicker = false
     @Published var showingTimePicker = false
+    @Published var showingEndDatePicker = false
+    @Published var showingEndTimePicker = false
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showError = false
