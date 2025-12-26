@@ -19,6 +19,9 @@ struct EventChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.startPolling(eventId: eventId)
+            Task {
+                await viewModel.markMessagesAsRead(eventId: eventId)
+            }
         }
         .onDisappear {
             viewModel.stopPolling()
@@ -241,6 +244,15 @@ class EventChatViewModel: ObservableObject {
         }
         
         isSending = false
+    }
+    
+    func markMessagesAsRead(eventId: String) async {
+        do {
+            _ = try await apiService.markMessagesAsRead(eventId: eventId)
+        } catch {
+            print("⚠️ Failed to mark messages as read: \(error)")
+            // Don't show error to user, this is a background operation
+        }
     }
 }
 

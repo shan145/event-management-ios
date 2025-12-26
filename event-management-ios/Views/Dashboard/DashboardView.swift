@@ -449,6 +449,7 @@ struct DashboardGroupCardView: View {
 struct DashboardEventCardView: View {
     let event: Event
     @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var viewModel: DashboardViewModel
     let onEventUpdated: (() -> Void)?
     
     // Modal states
@@ -461,6 +462,10 @@ struct DashboardEventCardView: View {
     @State private var showingChat = false
     @State private var isJoiningWaitlist = false
     @State private var isMarkingNotGoing = false
+    
+    private var unreadCount: Int {
+        viewModel.getUnreadCount(for: event.id)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -476,13 +481,27 @@ struct DashboardEventCardView: View {
                             .tracking(0.5)
                     }
                     
-                    ExpandableText(
-                        event.title,
-                        lineLimit: 2,
-                        font: .system(size: 22, weight: .bold, design: .rounded),
-                        color: Color.appTextPrimary,
-                        title: "Event Title"
-                    )
+                    HStack(spacing: 8) {
+                        ExpandableText(
+                            event.title,
+                            lineLimit: 2,
+                            font: .system(size: 22, weight: .bold, design: .rounded),
+                            color: Color.appTextPrimary,
+                            title: "Event Title"
+                        )
+                        
+                        if unreadCount > 0 {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 20, height: 20)
+                                
+                                Text("\(unreadCount)")
+                                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                    }
                     
                     if let description = event.description, !description.isEmpty {
                         ExpandableText(
@@ -655,8 +674,20 @@ struct DashboardEventCardView: View {
                         showingChat = true
                     }) {
                         HStack(spacing: AppSpacing.sm) {
-                            Image(systemName: "message.fill")
-                                .font(.system(size: 16))
+                            ZStack {
+                                Image(systemName: "message.fill")
+                                    .font(.system(size: 16))
+                                
+                                if unreadCount > 0 {
+                                    Text("\(unreadCount)")
+                                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .padding(4)
+                                        .background(Color.red)
+                                        .clipShape(Circle())
+                                        .offset(x: 8, y: -8)
+                                }
+                            }
                             Text("Open Chat")
                                 .font(.system(size: 15, weight: .medium, design: .rounded))
                             Spacer()
@@ -686,8 +717,20 @@ struct DashboardEventCardView: View {
                         showingChat = true
                     }) {
                         HStack(spacing: AppSpacing.sm) {
-                            Image(systemName: "message.fill")
-                                .font(.system(size: 16))
+                            ZStack {
+                                Image(systemName: "message.fill")
+                                    .font(.system(size: 16))
+                                
+                                if unreadCount > 0 {
+                                    Text("\(unreadCount)")
+                                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .padding(4)
+                                        .background(Color.red)
+                                        .clipShape(Circle())
+                                        .offset(x: 8, y: -8)
+                                }
+                            }
                             Text("Open Chat")
                                 .font(.system(size: 15, weight: .medium, design: .rounded))
                             Spacer()
@@ -786,6 +829,12 @@ struct DashboardEventCardView: View {
             }
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
+            .onDisappear {
+                // Refresh unread counts when chat is closed
+                Task {
+                    await viewModel.loadDashboardData()
+                }
+            }
         }
         .alert("Delete Event", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {

@@ -40,6 +40,7 @@ class DashboardViewModel: ObservableObject {
     @Published var myGroups: [Group] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var unreadCounts: [String: Int] = [:]
     
     // Filter state
     @Published var selectedGroupFilter: String = "all" // "all" or group ID
@@ -87,12 +88,35 @@ class DashboardViewModel: ObservableObject {
             self.myGroups = groups
             updateFilteredEvents() // Apply current filter
             
+            // Load unread message counts
+            await loadUnreadCounts()
+            
         } catch {
             print("❌ Dashboard error: \(error)")
             errorMessage = error.localizedDescription
         }
         
         isLoading = false
+    }
+    
+    private func loadUnreadCounts() async {
+        let allEventIds = (upcomingEvents + pastEvents).map { $0.id }
+        
+        guard !allEventIds.isEmpty else {
+            return
+        }
+        
+        do {
+            let response = try await apiService.getUnreadCounts(eventIds: allEventIds)
+            self.unreadCounts = response.data.unreadCounts
+        } catch {
+            print("⚠️ Failed to load unread counts: \(error)")
+            // Don't fail the whole load if unread counts fail
+        }
+    }
+    
+    func getUnreadCount(for eventId: String) -> Int {
+        return unreadCounts[eventId] ?? 0
     }
     
     private func loadUpcomingEvents() async throws -> [Event] {

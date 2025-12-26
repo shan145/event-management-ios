@@ -99,3 +99,12 @@ struct MessageData: Codable {
     let message: Message
 }
 
+struct UnreadCountsResponse: Codable {
+    let success: Bool
+    let data: UnreadCountsData
+}
+
+struct UnreadCountsData: Codable {
+    let unreadCounts: [String: Int]
+}
+

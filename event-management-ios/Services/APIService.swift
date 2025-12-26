@@ -814,6 +814,24 @@ class APIService: ObservableObject {
         let request = createRequest(url: url, method: "POST", body: body)
         return try await performRequest(request, responseType: SendMessageResponse.self)
     }
+    
+    func getUnreadCounts(eventIds: [String]) async throws -> UnreadCountsResponse {
+        var components = URLComponents(string: "\(baseURL)/messages/unread-counts")
+        components?.queryItems = [URLQueryItem(name: "eventIds", value: eventIds.joined(separator: ","))]
+        
+        guard let url = components?.url else {
+            throw APIError.invalidURL
+        }
+        
+        let request = createRequest(url: url)
+        return try await performRequest(request, responseType: UnreadCountsResponse.self)
+    }
+    
+    func markMessagesAsRead(eventId: String) async throws -> SuccessResponse {
+        let url = URL(string: "\(baseURL)/messages/event/\(eventId)/mark-read")!
+        let request = createRequest(url: url, method: "POST")
+        return try await performRequest(request, responseType: SuccessResponse.self)
+    }
 }
 
 // MARK: - Response Types
