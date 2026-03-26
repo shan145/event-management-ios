@@ -1,1 +1,0 @@
-@rpath/event-management-ios.debug.dylib

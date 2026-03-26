@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-Target 'event-management-ios' in project 'event-management-ios' (no dependencies)

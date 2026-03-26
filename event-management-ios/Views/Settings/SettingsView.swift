@@ -50,21 +50,32 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppSpacing.md)
                 }
+                
+                Button(action: { selectedTab = 2 }) {
+                    VStack(spacing: AppSpacing.xs) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 20))
+                        Text("Delete")
+                            .font(AppTypography.body1)
+                            .fontWeight(selectedTab == 2 ? .bold : .regular)
+                    }
+                    .foregroundColor(selectedTab == 2 ? Color.appTextPrimary : Color.appTextSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.md)
+                }
             }
             .padding(.horizontal, AppSpacing.lg)
             
             // Tab Content
             if selectedTab == 0 {
                 ProfileSettingsView()
-            } else {
+            } else if selectedTab == 1 {
                 PasswordSettingsView()
+            } else {
+                DeleteAccountSettingsView {
+                    showingDeleteSheet = true
+                }
             }
-            
-            DeleteAccountCard {
-                showingDeleteSheet = true
-            }
-            .padding(.horizontal, AppSpacing.lg)
-            .padding(.top, AppSpacing.md)
             
             Spacer()
             
@@ -329,6 +340,19 @@ private struct DeleteAccountCard: View {
         .background(Color.appSurface)
         .cornerRadius(AppCornerRadius.large)
         .appShadow(AppShadows.small)
+    }
+}
+
+private struct DeleteAccountSettingsView: View {
+    let onDeleteTap: () -> Void
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.lg) {
+                DeleteAccountCard(onDeleteTap: onDeleteTap)
+            }
+            .padding(AppSpacing.lg)
+        }
     }
 }
 

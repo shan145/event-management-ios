@@ -80,7 +80,7 @@ class EditEventViewModel: ObservableObject {
         description = event.description ?? ""
         location = event.location?.name ?? ""
         maxAttendees = event.maxAttendees?.description ?? ""
-        guests = "0" // Default value
+        guests = String(event.guests)
         notifyGroup = false // Default value
         
         // Parse the existing date and time strings
@@ -119,7 +119,7 @@ class EditEventViewModel: ObservableObject {
         
         do {
             let maxAttendeesInt = maxAttendees.isEmpty ? nil : Int(maxAttendees)
-            let guestsInt = Int(guests) ?? 0
+            let guestsInt = Int(guests.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
             
             let endDateString: String? = selectedEndDate != nil ? formatEndDateForAPI() : nil
             let endTimeString: String? = selectedEndTime != nil ? formatEndTimeForAPI() : nil

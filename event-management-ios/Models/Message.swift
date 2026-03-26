@@ -32,7 +32,7 @@ struct Message: Codable, Identifiable, Equatable {
         
         if let date = formatter.date(from: createdAt) {
             let displayFormatter = DateFormatter()
-            displayFormatter.dateStyle = .none
+            displayFormatter.dateStyle = .medium
             displayFormatter.timeStyle = .short
             return displayFormatter.string(from: date)
         }
@@ -40,7 +40,7 @@ struct Message: Codable, Identifiable, Equatable {
         let fallbackFormatter = ISO8601DateFormatter()
         if let date = fallbackFormatter.date(from: createdAt) {
             let displayFormatter = DateFormatter()
-            displayFormatter.dateStyle = .none
+            displayFormatter.dateStyle = .medium
             displayFormatter.timeStyle = .short
             return displayFormatter.string(from: date)
         }

@@ -6,6 +6,9 @@ struct LoginView: View {
     @State private var password = ""
     @State private var isLoading = false
     @State private var showingForgotPassword = false
+    @State private var biometricToggle = false
+    @State private var isUpdatingBiometricToggle = false
+    @State private var hasInitializedBiometricToggle = false
     
     var body: some View {
         VStack(spacing: AppSpacing.xl) {
@@ -48,6 +51,29 @@ struct LoginView: View {
                     action: handleLogin,
                     isLoading: isLoading
                 )
+
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Toggle("Enable \(authManager.biometricDisplayName) to sign in", isOn: $biometricToggle)
+                        .disabled(isUpdatingBiometricToggle)
+                    
+                    if !authManager.canUseBiometricLogin {
+                        Text("You must sign in once with email and password before enabling biometric sign-in.")
+                            .font(AppTypography.caption)
+                            .foregroundColor(Color.appTextSecondary)
+                    }
+                }
+                .padding(.top, AppSpacing.sm)
+                
+                if authManager.isBiometricLoginEnabled {
+                    AppButton(
+                        title: "Sign in with \(authManager.biometricDisplayName)",
+                        action: handleBiometricLogin,
+                        style: .secondary,
+                        isLoading: isLoading,
+                        isDisabled: !authManager.canUseBiometricLogin,
+                        icon: authManager.biometricDisplayName == "Face ID" ? "faceid" : "touchid"
+                    )
+                }
                 
                 Button("Forgot your password?") {
                     showingForgotPassword = true
@@ -72,6 +98,23 @@ struct LoginView: View {
                     hideKeyboard()
                 }
         )
+        .onAppear {
+            biometricToggle = authManager.isBiometricLoginEnabled
+            hasInitializedBiometricToggle = true
+        }
+        .onChange(of: biometricToggle) { oldValue, newValue in
+            guard hasInitializedBiometricToggle, oldValue != newValue else { return }
+            isUpdatingBiometricToggle = true
+            
+            Task {
+                let success = await authManager.setBiometricLoginEnabled(newValue)
+                if !success {
+                    biometricToggle = oldValue
+                }
+                
+                isUpdatingBiometricToggle = false
+            }
+        }
     }
     
     private func handleLogin() {
@@ -86,6 +129,15 @@ struct LoginView: View {
             if !success {
                 // Error is handled by AuthManager and shown in alert
             }
+        }
+    }
+    
+    private func handleBiometricLogin() {
+        isLoading = true
+        
+        Task {
+            _ = await authManager.loginWithBiometrics()
+            isLoading = false
         }
     }
     

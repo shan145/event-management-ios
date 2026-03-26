@@ -566,43 +566,64 @@ struct DashboardEventCardView: View {
                 }
                 
                 // Attendance stats
-                HStack(spacing: AppSpacing.lg) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(getGoingCount())")
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.statusGoing)
-                        Text("attending")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.grey500)
-                            .textCase(.uppercase)
-                            .tracking(0.5)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(getWaitlistCount())")
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.statusWaitlisted)
-                        Text("waitlisted")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.grey500)
-                            .textCase(.uppercase)
-                            .tracking(0.5)
-                    }
-                    
-                    if getTotalAttendees() > 0 {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    HStack(spacing: AppSpacing.lg) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("\(getTotalAttendees())")
+                            Text("\(getGoingCount())")
                                 .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.appTextPrimary)
-                            Text("total")
+                                .foregroundColor(Color.statusGoing)
+                            Text("attending")
                                 .font(.system(size: 13, weight: .medium, design: .rounded))
                                 .foregroundColor(Color.grey500)
                                 .textCase(.uppercase)
                                 .tracking(0.5)
                         }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(getWaitlistCount())")
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                .foregroundColor(Color.statusWaitlisted)
+                            Text("waitlisted")
+                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                .foregroundColor(Color.grey500)
+                                .textCase(.uppercase)
+                                .tracking(0.5)
+                        }
+                        
+                        Spacer()
                     }
                     
-                    Spacer()
+                    if getGuestCount() > 0 || getTotalAttendees() > 0 {
+                        HStack(spacing: AppSpacing.lg) {
+                            if getGuestCount() > 0 {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(getGuestCount())")
+                                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                        .foregroundColor(Color.statusAdmin)
+                                    Text("guests")
+                                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                                        .foregroundColor(Color.grey500)
+                                        .textCase(.uppercase)
+                                        .tracking(0.5)
+                                }
+                            }
+                            
+                            if getTotalAttendees() > 0 {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(getTotalAttendees())")
+                                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                        .foregroundColor(Color.appTextPrimary)
+                                    Text("total")
+                                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                                        .foregroundColor(Color.grey500)
+                                        .textCase(.uppercase)
+                                        .tracking(0.5)
+                                }
+                            }
+                            
+                            Spacer()
+                        }
+                    }
                 }
             }
             
@@ -906,7 +927,7 @@ struct DashboardEventCardView: View {
     private func getTotalAttendees() -> Int {
         let going = event.goingList?.count ?? 0
         let waitlisted = event.waitlist?.count ?? 0
-        return going + waitlisted
+        return going + waitlisted + getGuestCount()
     }
     
     private func getGoingCount() -> Int {
@@ -915,6 +936,10 @@ struct DashboardEventCardView: View {
     
     private func getWaitlistCount() -> Int {
         return event.waitlist?.count ?? 0
+    }
+    
+    private func getGuestCount() -> Int {
+        return max(0, event.guests)
     }
     
     private func canEditEvent() -> Bool {
@@ -1254,7 +1279,7 @@ struct EventRowView: View {
     }
     
     private var formattedMonth: String {
-        let eventDate = parseEventDate()
+        let eventDate = parseEventDateForDisplay()
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM"
@@ -1264,7 +1289,7 @@ struct EventRowView: View {
     }
     
     private var formattedDay: String {
-        let eventDate = parseEventDate()
+        let eventDate = parseEventDateForDisplay()
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "d"
@@ -1274,13 +1299,7 @@ struct EventRowView: View {
     }
     
     private var formattedTime: String {
-        let eventDate = parseEventDate()
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "h:mm a"
-        dateFormatter.timeZone = TimeZone(identifier: "America/New_York")
-        
-        return dateFormatter.string(from: eventDate)
+        event.formattedTime
     }
     
     private func parseEventDate() -> Date {
@@ -1339,6 +1358,36 @@ struct EventRowView: View {
         // Last resort
         print("⚠️ Failed to parse event date: '\(event.date)' and time: '\(event.time)', formattedDateTime: '\(eventDateTimeString)'")
         return Date()
+    }
+    
+    private func parseEventDateForDisplay() -> Date {
+        let etTimeZone = TimeZone(identifier: "America/New_York")!
+        
+        let isoFormats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        ]
+        
+        for format in isoFormats {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            formatter.timeZone = TimeZone(identifier: "UTC")
+            if let parsedDate = formatter.date(from: event.date) {
+                return parsedDate
+            }
+        }
+        
+        let dateOnlyFormatter = DateFormatter()
+        dateOnlyFormatter.dateFormat = "yyyy-MM-dd"
+        dateOnlyFormatter.timeZone = etTimeZone
+        if let parsedDate = dateOnlyFormatter.date(from: event.date) {
+            return parsedDate
+        }
+        
+        return parseEventDate()
     }
 }
 
