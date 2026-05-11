@@ -471,9 +471,16 @@ struct Event: Codable, Identifiable, Equatable {
     }
     
     var isPast: Bool {
-        let now = Date()
-        let eventDate = parseEventDateTime()
-        return eventDate < now
+        Date() >= pastCutoffDate
+    }
+
+    private var pastCutoffDate: Date {
+        if let endTime = endTime, !endTime.isEmpty,
+           let endDateTime = parseEventDateTime(dateString: endDate, timeString: endTime) {
+            return endDateTime
+        }
+
+        return parseEventDateTime().addingTimeInterval(4 * 60 * 60)
     }
     
     // Computed properties for the new views
@@ -488,22 +495,37 @@ struct Event: Codable, Identifiable, Equatable {
     }
     
     private func parseEventDateTime() -> Date {
+        parseEventDateTime(dateString: date, timeString: time) ?? Date.distantFuture
+    }
+
+    private func parseEventDateTime(dateString: String?, timeString: String?) -> Date? {
+        guard let dateString = dateString, !dateString.isEmpty else {
+            return nil
+        }
+
+        if let parsedISODate = parseISODate(dateString) {
+            return parsedISODate
+        }
+
         let etTimeZone = TimeZone(identifier: "America/New_York")!
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.timeZone = etTimeZone
-        
-        // Try to combine date and time strings directly
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
-        let combinedString = "\(date) \(time)"
-        if let parsedDate = dateFormatter.date(from: combinedString) {
-            return parsedDate
+
+        if let timeString = timeString, !timeString.isEmpty {
+            for format in ["yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm:ss"] {
+                dateFormatter.dateFormat = format
+                let combinedString = "\(dateString) \(timeString)"
+                if let parsedDate = dateFormatter.date(from: combinedString) {
+                    return parsedDate
+                }
+            }
         }
-        
-        // Fallback: parse separately and combine
+
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        if let parsedDate = dateFormatter.date(from: date) {
+        if let parsedDate = dateFormatter.date(from: dateString) {
             dateFormatter.dateFormat = "HH:mm"
-            if let parsedTime = dateFormatter.date(from: time) {
+            if let timeString = timeString, let parsedTime = dateFormatter.date(from: timeString) {
                 let calendar = Calendar.current
                 let dateComponents = calendar.dateComponents([.year, .month, .day], from: parsedDate)
                 let timeComponents = calendar.dateComponents([.hour, .minute], from: parsedTime)
@@ -522,9 +544,42 @@ struct Event: Codable, Identifiable, Equatable {
             }
             return parsedDate
         }
-        
-        // Last resort
-        return Date()
+
+        return nil
+    }
+
+    private func parseISODate(_ dateString: String) -> Date? {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        if let parsedDate = isoFormatter.date(from: dateString) {
+            return parsedDate
+        }
+
+        isoFormatter.formatOptions = [.withInternetDateTime]
+
+        if let parsedDate = isoFormatter.date(from: dateString) {
+            return parsedDate
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
+
+        for format in [
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        ] {
+            dateFormatter.dateFormat = format
+            if let parsedDate = dateFormatter.date(from: dateString) {
+                return parsedDate
+            }
+        }
+
+        return nil
     }
     
     static let sampleEvent = Event(
